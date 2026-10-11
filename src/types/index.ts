@@ -16,3 +16,12 @@ export type Propiedad = {
   garage: number,
   bedrooms: number,
 }
+
+export type BlogPropiedad = {
+  id: number,
+  image: string,
+  title: string,
+  date: string,
+  author: string,
+  description: string,
+}
