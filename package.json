@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "install": "^0.13.0",
     "ogl": "^1.0.11",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
+    "simple-parallax-js": "^7.0.0",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
