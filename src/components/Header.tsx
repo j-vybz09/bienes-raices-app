@@ -132,18 +132,18 @@ export default function Header() {
           </div>
         </section>
       ) : (
-        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-5 ">
-          <div className="flex justify-between items-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-lg py-3 px-5">
-            <NavLink className="font-medium " to="/">
+        <div className="relative z-10 mx-auto max-w-6xl px-10 pt-10">
+          <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-5 py-3 shadow-md">
+            <NavLink className="font-medium text-zinc-900" to="/">
               Bienes Raíces App
             </NavLink>
 
-            <nav className="flex gap-3">
+            <nav className="flex gap-4">
               <NavLink
                 className={({ isActive }) =>
                   isActive
-                    ? "text-black"
-                    : "text-black/50 transition hover:text-black"
+                    ? "font-medium text-zinc-900"
+                    : "text-zinc-500 transition hover:text-zinc-900"
                 }
                 to="/"
               >
@@ -153,8 +153,8 @@ export default function Header() {
               <NavLink
                 className={({ isActive }) =>
                   isActive
-                    ? "text-black"
-                    : "text-black/50 transition hover:text-black"
+                    ? "font-medium text-zinc-900"
+                    : "text-zinc-500 transition hover:text-zinc-900"
                 }
                 to="/nosotros"
               >
@@ -164,8 +164,8 @@ export default function Header() {
               <NavLink
                 className={({ isActive }) =>
                   isActive
-                    ? "text-black"
-                    : "text-black/50 transition hover:text-black"
+                    ? "font-medium text-zinc-900"
+                    : "text-zinc-500 transition hover:text-zinc-900"
                 }
                 to="/anuncios"
               >
@@ -175,8 +175,8 @@ export default function Header() {
               <NavLink
                 className={({ isActive }) =>
                   isActive
-                    ? "text-black"
-                    : "text-black/50 transition hover:text-black"
+                    ? "font-medium text-zinc-900"
+                    : "text-zinc-500 transition hover:text-zinc-900"
                 }
                 to="/blog"
               >
@@ -186,8 +186,8 @@ export default function Header() {
               <NavLink
                 className={({ isActive }) =>
                   isActive
-                    ? "text-black"
-                    : "text-black/50 transition hover:text-black"
+                    ? "font-medium text-zinc-900"
+                    : "text-zinc-500 transition hover:text-zinc-900"
                 }
                 to="/contacto"
               >
