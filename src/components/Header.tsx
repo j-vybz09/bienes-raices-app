@@ -10,7 +10,7 @@ export default function Header() {
   return (
     <header className="w-full">
       {isHome ? (
-        <section className="relative min-h-150 overflow-hidden bg-[#0d0b12]">
+        <section className="relative min-h-210 overflow-hidden bg-[#0d0b12]">
           {/* Fondo */}
           <div className="absolute inset-0 z-0">
             <LightRays
@@ -30,7 +30,7 @@ export default function Header() {
           </div>
 
           {/* NAVEGACIÓN */}
-          <div className="relative z-10 max-w-6xl mx-auto px-6 pt-5">
+          <div className="relative z-10 max-w-6xl mx-auto px-10 pt-10">
             <div className="flex justify-between items-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-lg py-3 px-5">
               <NavLink className="font-medium text-white" to="/">
                 Bienes Raíces App

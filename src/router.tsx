@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Layout from "./layouts/Layout"
-import IndexPage from "./views/IndexPage"
-import NosotrosPage from "./views/NosotrosPage"
-import AnunciosPage from "./views/AnunciosPage"
-import BlogPage from "./views/BlogPage"
-import ContactoPage from "./views/ContactoPage"
+import IndexPage from "./views/Home/IndexPage"
+import NosotrosPage from "./views/Nosotros/NosotrosPage"
+import AnunciosPage from "./views/Anuncios/AnunciosPage"
+import BlogPage from "./views/Blog/BlogPage"
+import ContactoPage from "./views/Contacto/ContactoPage"
 
 function AppRouter() {
 

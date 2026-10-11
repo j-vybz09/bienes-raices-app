@@ -7,7 +7,7 @@ export default function Layout() {
     <>
         <Header/>
 
-        <main className="max-w-7xl mx-auto py-5">
+        <main>
             <Outlet/>
         </main>
 
