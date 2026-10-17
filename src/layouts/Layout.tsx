@@ -14,8 +14,4 @@ export default function Layout() {
         <Footer/>
     </>
   )
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> feature/frontend-home

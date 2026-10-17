@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-
-export default function IndexPage() {
-  return (
-    <div>IndexPage</div>
-=======
 import { Propiedades } from "../../data/properties"
 import IndexDepas from "./components/IndexDepas/IndexDepas"
 import IndexIcons from "./components/IndexIcons/IndexIcons"
@@ -124,6 +118,5 @@ export default function IndexPage() {
           </div>
       </section>
     </>
->>>>>>> feature/frontend-home
   )
 }
