@@ -132,70 +132,77 @@ export default function Header() {
           </div>
         </section>
       ) : (
-        <div className="relative z-10 mx-auto max-w-6xl px-10 pt-10">
-          <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-5 py-3 shadow-md">
-            <NavLink className="font-medium text-zinc-900" to="/">
-              Bienes Raíces App
-            </NavLink>
-
-            <nav className="flex gap-4">
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-medium text-zinc-900"
-                    : "text-zinc-500 transition hover:text-zinc-900"
-                }
-                to="/"
-              >
-                Inicio
+        <>
+          <div className="relative z-10 mx-auto max-w-6xl px-10 pt-10">
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-5 py-3 shadow-md">
+              <NavLink className="font-medium text-zinc-900" to="/">
+                Bienes Raíces App
               </NavLink>
 
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-medium text-zinc-900"
-                    : "text-zinc-500 transition hover:text-zinc-900"
-                }
-                to="/nosotros"
-              >
-                Nosotros
-              </NavLink>
+              <nav className="flex gap-4">
+                <NavLink
+                  className={({ isActive }) =>
+                    isActive
+                      ? "font-medium text-zinc-900"
+                      : "text-zinc-500 transition hover:text-zinc-900"
+                  }
+                  to="/"
+                >
+                  Inicio
+                </NavLink>
 
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-medium text-zinc-900"
-                    : "text-zinc-500 transition hover:text-zinc-900"
-                }
-                to="/anuncios"
-              >
-                Anuncios
-              </NavLink>
+                <NavLink
+                  className={({ isActive }) =>
+                    isActive
+                      ? "font-medium text-zinc-900"
+                      : "text-zinc-500 transition hover:text-zinc-900"
+                  }
+                  to="/nosotros"
+                >
+                  Nosotros
+                </NavLink>
 
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-medium text-zinc-900"
-                    : "text-zinc-500 transition hover:text-zinc-900"
-                }
-                to="/blog"
-              >
-                Blog
-              </NavLink>
+                <NavLink
+                  className={({ isActive }) =>
+                    isActive
+                      ? "font-medium text-zinc-900"
+                      : "text-zinc-500 transition hover:text-zinc-900"
+                  }
+                  to="/anuncios"
+                >
+                  Anuncios
+                </NavLink>
 
-              <NavLink
-                className={({ isActive }) =>
-                  isActive
-                    ? "font-medium text-zinc-900"
-                    : "text-zinc-500 transition hover:text-zinc-900"
-                }
-                to="/contacto"
-              >
-                Contacto
-              </NavLink>
-            </nav>
+                <NavLink
+                  className={({ isActive }) =>
+                    isActive
+                      ? "font-medium text-zinc-900"
+                      : "text-zinc-500 transition hover:text-zinc-900"
+                  }
+                  to="/blog"
+                >
+                  Blog
+                </NavLink>
+
+                <NavLink
+                  className={({ isActive }) =>
+                    isActive
+                      ? "font-medium text-zinc-900"
+                      : "text-zinc-500 transition hover:text-zinc-900"
+                  }
+                  to="/contacto"
+                >
+                  Contacto
+                </NavLink>
+              </nav>
+            </div>
           </div>
-        </div>
+
+          {/* Separador */}
+          <div className="mx-auto mt-6 max-w-6xl px-10">
+            <div className="h-px w-full bg-zinc-200" />
+          </div>
+        </>
       )}
     </header>
   );
