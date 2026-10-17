@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import type { BlogPropiedad } from "../../../../types";
 
 type IndexBlogProp = {
@@ -44,12 +45,12 @@ export default function BlogCard({blog} : IndexBlogProp) {
               {blog.description}
             </p>
 
-            <button
-              type="button"
+            <NavLink
+              to="/Blog"
               className="mt-5 rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:bg-zinc-800 hover:shadow-lg active:scale-95"
             >
               Leer más
-            </button>
+            </NavLink>
 
           </div>
 
