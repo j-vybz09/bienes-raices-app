@@ -1,4 +1,5 @@
 import type { Propiedad } from "../../../../types";
+import { NavLink } from "react-router-dom";
 
 type PropiedadesProps = {
   propiedad: Propiedad;
@@ -57,9 +58,11 @@ export default function IndexDepas({ propiedad }: PropiedadesProps) {
             </div>
           </div>
 
-          <button className=" rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:bg-zinc-800 hover:shadow-lg active:scale-95">
+          <NavLink
+            to="anuncios" 
+            className=" rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:bg-zinc-800 hover:shadow-lg active:scale-95">
             Ver propiedad
-          </button>
+          </NavLink>
         </div>
       </div>
     </article>
