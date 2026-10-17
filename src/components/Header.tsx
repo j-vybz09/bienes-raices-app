@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-// import LightRays from "./LightRays";
+import LightRays from "./LightRays";
 import { useMemo } from "react";
 
 export default function Header() {
@@ -12,7 +12,7 @@ export default function Header() {
       {isHome ? (
         <section className="relative min-h-210 overflow-hidden bg-[#0d0b12]">
           {/* Fondo */}
-          {/* <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 z-0">
             <LightRays
               raysOrigin="top-center"
               raysColor="#ffffff"
@@ -27,7 +27,7 @@ export default function Header() {
               fadeDistance={1}
               saturation={1}
             />
-          </div> */}
+          </div>
 
           {/* NAVEGACIÓN */}
           <div className="relative z-10 max-w-6xl mx-auto px-10 pt-10">

@@ -32,7 +32,7 @@ export default function IndexDepas({ propiedad }: PropiedadesProps) {
             <div className="flex items-center gap-2">
               <img
                 className="h-6 w-6 object-contain"
-                src="/car.svg"
+                src={`${import.meta.env.BASE_URL}/car.svg`}
                 alt="Garaje"
               />
               <span className="text-sm font-medium text-zinc-700">{garage}</span>
@@ -41,7 +41,7 @@ export default function IndexDepas({ propiedad }: PropiedadesProps) {
             <div className="flex items-center gap-2">
               <img
                 className="h-6 w-6 object-contain"
-                src="/toilet.svg"
+                src={`${import.meta.env.BASE_URL}/toilet.svg`}
                 alt="Baños"
               />
               <span className="text-sm font-medium text-zinc-700">{bathrooms}</span>
@@ -50,7 +50,7 @@ export default function IndexDepas({ propiedad }: PropiedadesProps) {
             <div className="flex items-center gap-2">
               <img
                 className="h-6 w-6 object-contain"
-                src="/bed.svg"
+                src={`${import.meta.env.BASE_URL}/bed.svg`}
                 alt="Habitaciones"
               />
               <span className="text-sm font-medium text-zinc-700">{bedrooms}</span>

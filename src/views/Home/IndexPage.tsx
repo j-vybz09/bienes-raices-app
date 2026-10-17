@@ -63,7 +63,7 @@ export default function IndexPage() {
               transition="cubic-bezier(0,0,0,1)"
             >
               <img
-                src="/img/teamwork3.webp"
+                src={`${import.meta.env.BASE_URL}img/teamwork3.webp`}
                 alt="Nuestro equipo"
                 className="h-full w-full object-cover object-[50%_50%]"
               />
