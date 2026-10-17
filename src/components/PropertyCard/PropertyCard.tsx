@@ -1,10 +1,10 @@
-import type { Propiedad } from "../../../../types";
+import type { Propiedad } from "../../types";
 
 type PropiedadesProps = {
   propiedad: Propiedad;
 };
 
-export default function IndexDepas({ propiedad }: PropiedadesProps) {
+export default function PropertyCard({ propiedad }: PropiedadesProps) {
   const { image, title, description, price, bathrooms, garage, bedrooms } =
     propiedad;
 

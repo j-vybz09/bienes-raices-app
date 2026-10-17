@@ -1,5 +1,5 @@
 import { Propiedades } from "../../data/properties"
-import IndexDepas from "./components/IndexDepas/IndexDepas"
+import PropertyCard from "../../components/PropertyCard/PropertyCard";
 import IndexIcons from "./components/IndexIcons/IndexIcons"
 import SimpleParallax from "simple-parallax-js";
 import { Icons } from "./data/DbIcons"
@@ -44,7 +44,7 @@ export default function IndexPage() {
 
           <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             {Propiedades.map( propiedad => (
-              <IndexDepas
+              <PropertyCard
                 key={propiedad.id}
                 propiedad={propiedad}
               />
