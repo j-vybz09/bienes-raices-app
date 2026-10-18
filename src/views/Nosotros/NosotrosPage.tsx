@@ -26,7 +26,7 @@ export default function NosotrosPage() {
             {/* IMAGEN */}
             <div className="group relative overflow-hidden rounded-3xl">
               <img
-                src="/img/nosotros/nosotros.webp"
+                src={`${import.meta.env.BASE_URL}img/nosotros/nosotros.webp`}
                 alt="Nuestro equipo"
                 className="h-130 w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
@@ -114,7 +114,8 @@ export default function NosotrosPage() {
                 <ScrollStackItem itemClassName="h-[500px] w-full overflow-hidden p-0">
                   <div className="relative h-full w-full">
                     <img
-                      src="/img/nosotros/1.webp"
+                      
+                      src={`${import.meta.env.BASE_URL}img/nosotros/1.webp`}
                       alt="Casa residencial"
                       className="h-full w-full object-cover"
                     />
@@ -135,7 +136,7 @@ export default function NosotrosPage() {
                 <ScrollStackItem itemClassName="h-[500px] w-full overflow-hidden p-0">
                   <div className="relative h-full w-full">
                     <img
-                      src="/img/nosotros/2.webp"
+                      src={`${import.meta.env.BASE_URL}img/nosotros/2.webp`}
                       alt="Interior de una propiedad"
                       className="h-full w-full object-cover"
                     />
@@ -156,7 +157,7 @@ export default function NosotrosPage() {
                 <ScrollStackItem itemClassName="h-[500px] w-full overflow-hidden p-0">
                   <div className="relative h-full w-full">
                     <img
-                      src="/img/nosotros/3.webp"
+                      src={`${import.meta.env.BASE_URL}img/nosotros/3.webp`}
                       alt="Propiedad residencial"
                       className="h-full w-full object-cover"
                     />
