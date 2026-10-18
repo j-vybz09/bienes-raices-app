@@ -1,10 +1,11 @@
-import type { Propiedad } from "../../../../types";
+import { Link } from "react-router-dom";
+import type { Propiedad } from "../../types";
 
 type PropiedadesProps = {
   propiedad: Propiedad;
 };
 
-export default function IndexDepas({ propiedad }: PropiedadesProps) {
+export default function PropertyCard({ propiedad }: PropiedadesProps) {
   const { image, title, description, price, bathrooms, garage, bedrooms } =
     propiedad;
 
@@ -57,9 +58,11 @@ export default function IndexDepas({ propiedad }: PropiedadesProps) {
             </div>
           </div>
 
-          <button className=" rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:bg-zinc-800 hover:shadow-lg active:scale-95">
+          <Link 
+            to={`/anuncios/${propiedad.id}`}
+            className=" rounded-xl bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:bg-zinc-800 hover:shadow-lg active:scale-95">
             Ver propiedad
-          </button>
+          </Link>
         </div>
       </div>
     </article>
