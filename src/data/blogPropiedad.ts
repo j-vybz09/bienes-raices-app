@@ -9,6 +9,7 @@ export const blogPropiedad: BlogPropiedad[] = [
     author: "Admin",
     description:
       "Consejos para construir una terraza en el techo de tu casa con los mejores materiales y ahorrando dinero.",
+    content: "Construir una terraza en el techo de tu casa puede ser una excelente manera de aprovechar el espacio disponible. En este artículo conocerás algunos aspectos importantes que debes considerar antes de iniciar el proyecto."
   },
   {
     id: 2,
@@ -18,5 +19,6 @@ export const blogPropiedad: BlogPropiedad[] = [
     author: "Admin",
     description:
       "Descubre diferentes consejos para decorar tu hogar, aprovechar mejor los espacios y crear ambientes modernos y cómodos para toda la familia.",
+    content: "Construir una terraza en el techo de tu casa puede ser una excelente manera de aprovechar el espacio disponible. En este artículo conocerás algunos aspectos importantes que debes considerar antes de iniciar el proyecto."
   },
 ];

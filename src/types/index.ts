@@ -24,4 +24,5 @@ export type BlogPropiedad = {
   date: string,
   author: string,
   description: string,
+  content: string
 }
