@@ -1,7 +1,29 @@
-import { Propiedades } from "../../data/properties";
 import PropertyCard from "../../components/PropertyCard/PropertyCard";
+import { useEffect, useState } from "react";
+import type { Propiedad } from "@/types";
+import { getProperties } from "@/lib/api";
 
 export default function AnunciosPage() {
+  const [properties, setProperties] = useState<Propiedad[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    async function loadProperties() {
+      try {
+        const data = await getProperties();
+        setProperties(data)
+      } catch (error) {
+        setError("No se pudieron cargar las propiedades")
+        console.log(error)
+      }finally{
+        setLoading(false)
+      }
+    }
+
+    loadProperties()
+  }, [])
+
   return (
     <section className="min-h-screen bg-white py-20">
       <div className="mx-auto max-w-7xl px-6">
@@ -21,15 +43,28 @@ export default function AnunciosPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {Propiedades.map((propiedad) => (
-            <PropertyCard
-              key={propiedad.id}
-              propiedad={propiedad}
-            />
-          ))}
-        </div>
+        {loading && (
+          <p className="mt-12 text-center text-zinc-500">
+            Cargando propiedades...
+          </p>
+        )}
 
+        {error && (
+          <p className="mt-12 text-center text-red-500">
+            {error}
+          </p>
+        )}
+
+        {!loading && !error && (
+          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {properties.map((propiedad) => (
+              <PropertyCard
+                key={propiedad.id}
+                propiedad={propiedad}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
