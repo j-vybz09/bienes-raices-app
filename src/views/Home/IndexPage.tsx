@@ -1,12 +1,36 @@
-import { Propiedades } from "../../data/properties"
+import { useState, useEffect } from "react";
+import { getProperties } from "@/lib/api";
 import PropertyCard from "../../components/PropertyCard/PropertyCard";
 import IndexIcons from "./components/IndexIcons/IndexIcons"
 import SimpleParallax from "simple-parallax-js";
 import { Icons } from "./data/DbIcons"
 import IndexBlog from "./components/IndexBlog/IndexBlog";
 import IndexTestimonial from "./components/IndexBlog/IndexTestimonial";
+import type { Propiedad } from "@/types";
 
 export default function IndexPage() {
+
+  //Creamos un estado donde se van alamcenar las propiedades, dentro de un arreglo
+  const [properties, setProperties] = useState<Propiedad[]>([])
+
+  //Una vez cargue la página, llamamos la funcion de getProperties la cual se almacenan dentro data
+  useEffect( () => {
+    async function loadProperties() {
+      try {
+        const data = await getProperties()
+
+        setProperties(data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    loadProperties()
+  }, [] )//[] quiere decir, ejecuta este useEffect una vez se cargue IndexPage
+
+  //Limitamos la cantidad de propiedades que queremos ver
+  const featuredProperties = properties.slice(0, 6)
+  
 
   return (
     <>
@@ -43,7 +67,7 @@ export default function IndexPage() {
           </div>
 
           <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
-            {Propiedades.map( propiedad => (
+            {featuredProperties.slice(0,6).map( propiedad => (
               <PropertyCard
                 key={propiedad.id}
                 propiedad={propiedad}

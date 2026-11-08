@@ -1,7 +1,22 @@
-import { blogPropiedad } from "../../data/blogPropiedad";
+import { useState, useEffect } from "react";
+import { getBlogs } from "@/lib/api";
 import BlogCard from "../../components/BlogCard/BlogCard";
+import type { BlogPropiedad } from "@/types";
 
 export default function BlogPage() {
+
+  const [blogs, setBlogs] = useState<BlogPropiedad[]>([]);
+
+  useEffect( () => {
+    getBlogs()
+      .then( data => {
+        setBlogs(data)
+      } )
+      .catch( error => {
+        console.log(error)
+      } )
+  }, [] )
+
   return (
     <section className="min-h-screen bg-white py-20">
       <div className="mx-auto max-w-7xl px-6">
@@ -21,7 +36,7 @@ export default function BlogPage() {
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {blogPropiedad.map((blog) => (
+          {blogs.map((blog) => (
             <BlogCard
               key={blog.id}
               blog={blog}

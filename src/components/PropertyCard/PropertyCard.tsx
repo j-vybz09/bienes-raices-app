@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Propiedad } from "../../types";
+import { getAssetUrl } from "@/lib/assets";
 
 type PropiedadesProps = {
   propiedad: Propiedad;
@@ -13,7 +14,7 @@ export default function PropertyCard({ propiedad }: PropiedadesProps) {
     <article className="group overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
       <img
         className="h-80 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        src={image}
+        src={getAssetUrl(image)}
         alt="Casa de lujo"
       />
 

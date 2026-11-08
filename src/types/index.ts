@@ -11,10 +11,10 @@ export type Propiedad = {
   image: string,
   title: string,
   description: string,
-  price: number,
-  bathrooms: number,
-  garage: number,
-  bedrooms: number,
+  price: string,
+  bathrooms: string,
+  garage: string,
+  bedrooms: string,
 }
 
 export type BlogPropiedad = {

@@ -1,14 +1,47 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Propiedades } from "../../data/properties";
+import { getProperty } from "@/lib/api";
+import type { Propiedad } from "../../types";
+import { getAssetUrl } from "@/lib/assets";
 
 export default function PropertyDetailPage() {
   const { id } = useParams();
 
-  const propiedad = Propiedades.find(
-    (propiedad) => propiedad.id === Number(id),
-  );
+  const [propiedad, setPropiedad] = useState<Propiedad | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!propiedad) {
+  useEffect( () => {
+    async function loadProperty() {
+      if(!id){
+        setError("Propiedad no encontrada")
+        setLoading(false)
+        return;
+      }
+
+      try {
+        const data = await getProperty(Number(id))
+        setPropiedad(data)
+      } catch (error) {
+        setError("No se pudo cargar la propiedad")
+        console.log(error)
+      }finally{
+        setLoading(false)
+      }
+    }
+
+    loadProperty()
+  }, [id] )
+
+  if(loading){
+    return(
+      <main className="flex min-h-screen items-center justify-center bg-white">
+        <p className="text-zinc-500">Cargando Propiedad...</p>
+      </main>
+    )
+  }
+
+  if (error || !propiedad) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-6">
         <div className="text-center">
@@ -37,7 +70,7 @@ export default function PropertyDetailPage() {
       <section className="relative">
         <div className="h-105 w-full md:h-140">
           <img
-            src={propiedad.image}
+            src={getAssetUrl(propiedad.image)}
             alt={propiedad.title}
             className="h-full w-full object-cover"
           />
