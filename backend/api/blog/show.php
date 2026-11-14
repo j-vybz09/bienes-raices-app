@@ -1,54 +1,55 @@
 <?php
 
-    require_once "../../config/database.php";
+require_once __DIR__ . "/../../config/cors.php";
+require_once __DIR__ . "/../../config/database.php";
 
-    $id = $_GET["id"] ?? null;
+if ($_SERVER["REQUEST_METHOD"] !== "GET") {
+    http_response_code(405);
+    echo json_encode([
+        "success" => false,
+        "message" => "Método no permitido. Utiliza GET."
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-    if(!$id){
-        //Al presentar el error con este numero
-        http_response_code(400);
-        //El success es false, y tira el siguiente mensaje
+$id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+
+if (!$id || $id < 1) {
+    http_response_code(400);
+    echo json_encode([
+        "success" => false,
+        "message" => "Se requiere un ID de publicación válido."
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+try {
+    $stmt = $pdo->prepare("
+        SELECT id, image, title, date, author, description, content
+        FROM blog_posts
+        WHERE id = :id
+    ");
+    $stmt->execute([":id" => $id]);
+    $blog = $stmt->fetch();
+
+    if (!$blog) {
+        http_response_code(404);
         echo json_encode([
             "success" => false,
-            "message" => "Se requiere el ID de la publicación"
-        ]);
+            "message" => "Publicación no encontrada."
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    try {
-        $sql = "SELECT id, image, title, date, author, description, content FROM blog_posts WHERE id = :id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ":id" => $id
-        ]);
-        $blog = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode([
+        "success" => true,
+        "data" => $blog
+    ], JSON_UNESCAPED_UNICODE);
 
-        if(!$blog){
-            http_response_code(404);
-
-            echo json_encode([
-                "success" => false,
-                "message" => "Publicación no encontrada"
-            ]);
-
-            exit;
-        }
-
-        header("Content-Type: application/json");
-
-        echo json_encode([
-            "success" => true,
-            "data" => $blog
-        ]);
-
-    } catch (\Throwable $e) {
-        http_response_code(500);
-
-        header("Content-Type: application/json");
-
-        echo json_encode([
-            "success" => false,
-            "message" => "Error al obtener la publicación",
-            "error" => $e->getMessage()
-        ]);
-    }
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error al obtener la publicación."
+    ], JSON_UNESCAPED_UNICODE);
+}

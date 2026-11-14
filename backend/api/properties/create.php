@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . "/../../config/auth.php";
+requireAdmin();
+
 require_once "../../config/database.php";
 
 try {

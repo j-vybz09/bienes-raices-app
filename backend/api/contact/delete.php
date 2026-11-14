@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . "/../../config/auth.php";
+requireAdmin();
+
 // Importamos la conexión a la base de datos.
 require_once __DIR__ . '/../../config/database.php';
 

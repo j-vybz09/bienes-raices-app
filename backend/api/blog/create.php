@@ -1,52 +1,74 @@
 <?php
-    require_once "../../config/database.php";
 
-    try {
-        $data = json_decode(
-            file_get_contents("php://input"),
-            true
-        );
+require_once __DIR__ . "/../../config/auth.php";
+requireAdmin();
 
-        if(!$data){
-            http_response_code(400);
+require_once __DIR__ . "/../../config/database.php";
 
-            echo json_encode([
-                "success" => false,
-                "message" => "No se recibieron datos"
-            ]);
+header("Content-Type: application/json; charset=UTF-8");
 
-            exit;
-        }
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    http_response_code(405);
+    echo json_encode([
+        "success" => false,
+        "message" => "Método no permitido. Utiliza POST."
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-        $sql = "INSERT INTO blog_posts (image, title, date, author, description, content) VALUES (:image, :title, :date, :author, :description, :content)";
+$data = json_decode(file_get_contents("php://input"), true);
 
-        $stmt = $pdo->prepare($sql);
+$requiredFields = ["image", "title", "date", "author", "description", "content"];
 
-        $stmt->execute([
-            ":image" => $data["image"],
-            ":title" => $data["title"],
-            ":date" => $data["date"],
-            ":author" => $data["author"],
-            ":description" => $data["description"],
-            ":content" => $data["content"]
-        ]);
+if (!is_array($data)) {
+    http_response_code(400);
+    echo json_encode([
+        "success" => false,
+        "message" => "El cuerpo de la solicitud no contiene JSON válido."
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-        header("Content-Type: application/json");
-
-        echo json_encode([
-            "success" => true,
-            "message" => "Publicación creada correctamente",
-            "id" => $pdo->lastInsertId()
-        ]);
-        
-    } catch (\Throwable $e) {
-        http_response_code(500);
-
-        header("Content-Type: application/json");
-
+foreach ($requiredFields as $field) {
+    if (!isset($data[$field]) || !is_string($data[$field]) || trim($data[$field]) === "") {
+        http_response_code(400);
         echo json_encode([
             "success" => false,
-            "message" => "Error al crear la publicación",
-            "error" => $e->getMessage()
-        ]);
+            "message" => "El campo " . $field . " es obligatorio."
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
+}
+
+try {
+    $sql = "
+        INSERT INTO blog_posts
+            (image, title, date, author, description, content)
+        VALUES
+            (:image, :title, :date, :author, :description, :content)
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ":image" => $data["image"],
+        ":title" => $data["title"],
+        ":date" => $data["date"],
+        ":author" => $data["author"],
+        ":description" => $data["description"],
+        ":content" => $data["content"]
+    ]);
+
+    http_response_code(201);
+    echo json_encode([
+        "success" => true,
+        "message" => "Publicación creada correctamente.",
+        "id" => (int) $pdo->lastInsertId()
+    ], JSON_UNESCAPED_UNICODE);
+
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error al crear la publicación."
+    ], JSON_UNESCAPED_UNICODE);
+}

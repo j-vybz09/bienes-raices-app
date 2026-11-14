@@ -1,12 +1,12 @@
 export default function IndexTestimonial() {
   return (
-    <aside className="h-full rounded-3xl bg-zinc-950 p-8 text-white shadow-sm">
+    <aside className="h-full rounded-3xl bg-zinc-950 p-6 text-white shadow-sm sm:p-8">
 
       <p className="text-sm font-medium uppercase tracking-[0.3em] text-zinc-400">
         Opiniones
       </p>
 
-      <h3 className="mt-3 text-3xl font-semibold">
+      <h3 className="mt-3 text-2xl font-semibold sm:text-3xl">
         Testimoniales
       </h3>
 

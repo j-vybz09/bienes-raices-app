@@ -72,13 +72,13 @@ const CARD_SHADOW = [
 
 export const ScrollStackItem = ({ children, itemClassName = '', style }: ScrollStackItemProps) => (
   <div
-    className={`relative box-border h-80 w-full origin-top rounded-[28px] p-10 [background:light-dark(#ffffff,#18181b)] [color:light-dark(#18181b,#fafafa)] will-change-transform ${itemClassName}`.trim()}
+    className={`relative box-border h-80 w-full origin-top rounded-[28px] p-10 [background:light-dark(#ffffff,#18181b)] text-[light-dark(#18181b,#fafafa)] will-change-transform ${itemClassName}`.trim()}
     style={{ boxShadow: CARD_SHADOW, ...style }}
   >
     {children}
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 rounded-[inherit] bg-black opacity-[var(--scroll-stack-dim,0)]"
+      className="pointer-events-none absolute inset-0 rounded-[inherit] bg-black opacity-(--scroll-stack-dim,0)"
     />
   </div>
 );

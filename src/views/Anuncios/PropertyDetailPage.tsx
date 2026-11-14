@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getProperty } from "@/lib/api";
 import type { Propiedad } from "../../types";
-import { getAssetUrl } from "@/lib/assets";
+import { getImageUrl } from "@/lib/api";
 
 export default function PropertyDetailPage() {
   const { id } = useParams();
@@ -70,7 +70,7 @@ export default function PropertyDetailPage() {
       <section className="relative">
         <div className="h-105 w-full md:h-140">
           <img
-            src={getAssetUrl(propiedad.image)}
+            src={getImageUrl(propiedad.image)}
             alt={propiedad.title}
             className="h-full w-full object-cover"
           />

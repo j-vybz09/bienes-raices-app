@@ -1,84 +1,94 @@
 <?php
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . "/../../config/auth.php";
+requireAdmin();
 
-header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../helpers/images.php";
 
-// Verificamos que la petición sea DELETE
-if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+header("Content-Type: application/json; charset=UTF-8");
+
+// Solo permitimos solicitudes DELETE.
+if ($_SERVER["REQUEST_METHOD"] !== "DELETE") {
     http_response_code(405);
 
     echo json_encode([
-        'success' => false,
-        'message' => 'Método no permitido'
-    ]);
+        "success" => false,
+        "message" => "Método no permitido. Utiliza DELETE."
+    ], JSON_UNESCAPED_UNICODE);
 
     exit;
 }
 
-// Obtenemos el ID desde la URL
-$id = $_GET['id'] ?? null;
+// Validamos el ID.
+$id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
-// Validamos que exista y sea un número entero
-if (!$id || !filter_var($id, FILTER_VALIDATE_INT)) {
+if (!$id || $id < 1) {
     http_response_code(400);
 
     echo json_encode([
-        'success' => false,
-        'message' => 'El ID de la propiedad es obligatorio'
-    ]);
+        "success" => false,
+        "message" => "El ID de la propiedad no es válido."
+    ], JSON_UNESCAPED_UNICODE);
 
     exit;
 }
 
 try {
+    // Buscamos la propiedad y recuperamos su imagen.
+    $find = $pdo->prepare("
+        SELECT image
+        FROM properties
+        WHERE id = :id
+    ");
 
-    // Primero verificamos que la propiedad exista
-    $stmt = $pdo->prepare(
-        "SELECT id FROM properties WHERE id = :id"
-    );
-
-    $stmt->execute([
-        'id' => $id
+    $find->execute([
+        ":id" => $id
     ]);
 
-    $property = $stmt->fetch();
+    $property = $find->fetch(PDO::FETCH_ASSOC);
 
-    // Si no existe, devolvemos 404
     if (!$property) {
         http_response_code(404);
 
         echo json_encode([
-            'success' => false,
-            'message' => 'Propiedad no encontrada'
-        ]);
+            "success" => false,
+            "message" => "Propiedad no encontrada."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // Eliminamos la propiedad
-    $stmt = $pdo->prepare(
-        "DELETE FROM properties WHERE id = :id"
-    );
+    // Eliminamos primero el registro de MySQL.
+    $stmt = $pdo->prepare("
+        DELETE FROM properties
+        WHERE id = :id
+    ");
 
     $stmt->execute([
-        'id' => $id
+        ":id" => $id
     ]);
 
-    // Respuesta exitosa
+    // Después eliminamos la imagen física.
+    $imageDeleted = deleteUploadedImage(
+        $property["image"],
+        "properties"
+    );
+
     echo json_encode([
-        'success' => true,
-        'message' => 'Propiedad eliminada correctamente',
-        'id' => (int) $id
-    ]);
+        "success" => true,
+        "message" => $imageDeleted
+            ? "Propiedad e imagen eliminadas correctamente."
+            : "Propiedad eliminada, pero no fue posible eliminar su imagen.",
+        "id" => (int) $id,
+        "image_deleted" => $imageDeleted
+    ], JSON_UNESCAPED_UNICODE);
 
-} catch (\Throwable $e) {
-
+} catch (Throwable $e) {
     http_response_code(500);
 
     echo json_encode([
-        'success' => false,
-        'message' => 'Error al eliminar la propiedad',
-        'error' => $e->getMessage()
-    ]);
+        "success" => false,
+        "message" => "Error al eliminar la propiedad."
+    ], JSON_UNESCAPED_UNICODE);
 }

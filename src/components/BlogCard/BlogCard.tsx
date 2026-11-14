@@ -1,5 +1,5 @@
 import type { BlogPropiedad } from "../../types";
-import { getAssetUrl } from "@/lib/assets";
+import { getImageUrl } from "@/lib/api";
 import { Link } from "react-router-dom";
 
 type BlogCardProps = {
@@ -14,7 +14,7 @@ export default function BlogCard({ blog }: BlogCardProps) {
       <div className="overflow-hidden">
         <img
           className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          src={getAssetUrl(image)}
+          src={getImageUrl(image)}
           alt={title}
         />
       </div>

@@ -1,121 +1,149 @@
-
 <?php
 
-header("Content-Type: application/json; charset=utf-8");
+require_once __DIR__ . "/../../config/auth.php";
+requireAdmin();
 
-require_once "../../config/database.php";
+require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/../../helpers/images.php";
+
+header("Content-Type: application/json; charset=UTF-8");
+
+// Solo permitimos solicitudes PUT.
+if ($_SERVER["REQUEST_METHOD"] !== "PUT") {
+    http_response_code(405);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Método no permitido. Utiliza PUT."
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+// Validamos el ID.
+$id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+
+if (!$id || $id < 1) {
+    http_response_code(400);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "El ID de la publicación no es válido."
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+// Recibimos los datos JSON.
+$data = json_decode(file_get_contents("php://input"), true);
+
+$requiredFields = [
+    "image",
+    "title",
+    "date",
+    "author",
+    "description",
+    "content"
+];
+
+if (!is_array($data)) {
+    http_response_code(400);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "El cuerpo de la solicitud no contiene JSON válido."
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+// Validamos los campos obligatorios.
+foreach ($requiredFields as $field) {
+    if (
+        !isset($data[$field]) ||
+        !is_string($data[$field]) ||
+        trim($data[$field]) === ""
+    ) {
+        http_response_code(400);
+
+        echo json_encode([
+            "success" => false,
+            "message" => "El campo " . $field . " es obligatorio."
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+}
 
 try {
+    // Consultamos la imagen que tiene actualmente la publicación.
+    $find = $pdo->prepare("
+        SELECT image
+        FROM blog_posts
+        WHERE id = :id
+    ");
 
-    // 1. Obtener el ID desde la URL
-    $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+    $find->execute([":id" => $id]);
 
-    if (!$id) {
-        http_response_code(400);
+    $currentBlog = $find->fetch(PDO::FETCH_ASSOC);
 
-        echo json_encode([
-            "success" => false,
-            "message" => "El ID de la publicación es obligatorio"
-        ]);
-
-        exit;
-    }
-
-    // 2. Obtener los datos enviados en formato JSON
-    $data = json_decode(
-        file_get_contents("php://input"),
-        true
-    );
-
-    if (!is_array($data)) {
-        http_response_code(400);
-
-        echo json_encode([
-            "success" => false,
-            "message" => "No se recibieron datos válidos"
-        ]);
-
-        exit;
-    }
-
-    // 3. Validar los campos necesarios
-    $requiredFields = [ "image", "title", "date", "author", "description", "content"];
-
-    foreach ($requiredFields as $field) {
-
-        if (!array_key_exists($field, $data) || $data[$field] === null) {
-
-            http_response_code(400);
-
-            echo json_encode([
-                "success" => false,
-                "message" => "Falta el campo: " . $field
-            ]);
-
-            exit;
-        }
-    }
-
-    // 4. Comprobar que la publicación existe
-    $checkSql = "SELECT id FROM blog_posts WHERE id = :id";
-
-    $checkStmt = $pdo->prepare($checkSql);
-
-    $checkStmt->execute([
-        ":id" => $id
-    ]);
-
-    if (!$checkStmt->fetch()) {
-
+    if (!$currentBlog) {
         http_response_code(404);
 
         echo json_encode([
             "success" => false,
-            "message" => "La publicación no existe"
-        ]);
+            "message" => "La publicación no existe."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // 5. Construir la consulta SQL para actualizar
-    $sql = "
+    $oldImage = $currentBlog["image"];
+    $newImage = trim($data["image"]);
+
+    // Actualizamos los datos de la publicación.
+    $stmt = $pdo->prepare("
         UPDATE blog_posts
-        SET
-            image = :image,
+        SET image = :image,
             title = :title,
             date = :date,
             author = :author,
             description = :description,
             content = :content
         WHERE id = :id
-    ";
+    ");
 
-    $stmt = $pdo->prepare($sql);
-
-    // 6. Ejecutar la actualización
     $stmt->execute([
-        ":image" => $data["image"],
-        ":title" => $data["title"],
+        ":image" => $newImage,
+        ":title" => trim($data["title"]),
         ":date" => $data["date"],
-        ":author" => $data["author"],
-        ":description" => $data["description"],
-        ":content" => $data["content"],
+        ":author" => trim($data["author"]),
+        ":description" => trim($data["description"]),
+        ":content" => trim($data["content"]),
         ":id" => $id
     ]);
 
+    // Si la imagen cambió, intentamos eliminar la anterior.
+    $imageDeleted = true;
+
+    if ($oldImage !== $newImage) {
+        $imageDeleted = deleteUploadedImage($oldImage, "blog");
+    }
+
     echo json_encode([
         "success" => true,
-        "message" => "Publicación actualizada correctamente",
-        "id" => $id
-    ]);
+        "message" => $imageDeleted
+            ? "Publicación actualizada correctamente."
+            : "Publicación actualizada, pero no fue posible eliminar la imagen anterior.",
+        "id" => $id,
+        "old_image_deleted" => $imageDeleted
+    ], JSON_UNESCAPED_UNICODE);
 
-} catch (\Throwable $e) {
-
+} catch (Throwable $e) {
     http_response_code(500);
 
     echo json_encode([
         "success" => false,
-        "message" => "Error al actualizar la publicación",
-        "error" => $e->getMessage()
-    ]);
+        "message" => "Error al actualizar la publicación."
+    ], JSON_UNESCAPED_UNICODE);
 }
