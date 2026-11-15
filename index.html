@@ -1,13 +1,35 @@
+
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bienes_raices_react_php</title>
+
+    <title>Bienes Raíces | Encuentra tu próximo hogar</title>
+
+    <!-- Recupera las rutas cuando GitHub Pages recibe una URL interna -->
+    <script>
+      (function (location) {
+        if (location.search[1] === "/") {
+          const decoded = location.search
+            .slice(1)
+            .split("&")
+            .map((part) => part.replace(/~and~/g, "&"))
+            .join("?");
+
+          window.history.replaceState(
+            null,
+            null,
+            location.pathname.slice(0, -1) + decoded + location.hash
+          );
+        }
+      })(window.location);
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

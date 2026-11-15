@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Redirigiendo...</title>
+
+    <script>
+      const pathSegmentsToKeep = 1;
+
+      const locationData = window.location;
+
+      locationData.replace(
+        locationData.protocol +
+          "//" +
+          locationData.hostname +
+          (locationData.port ? ":" + locationData.port : "") +
+          locationData.pathname
+            .split("/")
+            .slice(0, 1 + pathSegmentsToKeep)
+            .join("/") +
+          "/?/" +
+          locationData.pathname
+            .slice(1)
+            .split("/")
+            .slice(pathSegmentsToKeep)
+            .join("/")
+            .replace(/&/g, "~and~") +
+          (locationData.search
+            ? "&" + locationData.search.slice(1).replace(/&/g, "~and~")
+            : "") +
+          locationData.hash
+      );
+    </script>
+  </head>
+
+  <body>
+    <p>Redirigiendo a la página solicitada...</p>
+  </body>
+</html>
