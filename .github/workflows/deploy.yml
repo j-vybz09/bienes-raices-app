@@ -1,3 +1,4 @@
+
 name: Deploy React App to GitHub Pages
 
 on:
@@ -9,6 +10,10 @@ permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -32,8 +37,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
+      - name: Build React application
+        run: pnpm run build
+
+      - name: Configure SPA fallback
+        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
