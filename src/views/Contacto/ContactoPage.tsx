@@ -1,4 +1,6 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 type ContactForm = {
   name: string;
@@ -7,8 +9,18 @@ type ContactForm = {
   message: string;
 };
 
+type Feedback = {
+  type: "success" | "error" | "";
+  message: string;
+};
+
 export default function ContactoPage() {
-  // 1. Estado del formulario
+  const [searchParams] = useSearchParams();
+
+  const propertyTitle = searchParams.get("property");
+  const propertyId = searchParams.get("propertyId");
+
+  // Estado del formulario
   const [formData, setFormData] = useState<ContactForm>({
     name: "",
     email: "",
@@ -16,16 +28,30 @@ export default function ContactoPage() {
     message: "",
   });
 
-  // 2. Estado para controlar el envío
+  // Estado del envío
   const [loading, setLoading] = useState(false);
 
-  // 3. Estado para mostrar el resultado
-  const [feedback, setFeedback] = useState({
+  // Estado de respuesta
+  const [feedback, setFeedback] = useState<Feedback>({
     type: "",
     message: "",
   });
 
-  // 4. Actualizar los campos cuando el usuario escribe
+  // Detectar si el visitante viene desde una propiedad
+  useEffect(() => {
+    if (!propertyTitle) return;
+
+    const propertyMessage = propertyId
+      ? `Hola, quisiera recibir más información sobre la propiedad "${propertyTitle}" (ID: ${propertyId}).`
+      : `Hola, quisiera recibir más información sobre la propiedad "${propertyTitle}".`;
+
+    setFormData((previousData) => ({
+      ...previousData,
+      message: propertyMessage,
+    }));
+  }, [propertyTitle, propertyId]);
+
+  // Actualizar los campos
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -37,7 +63,7 @@ export default function ContactoPage() {
     }));
   };
 
-  // 5. Enviar el formulario al backend
+  // Enviar el formulario al backend
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -45,7 +71,9 @@ export default function ContactoPage() {
     setFeedback({ type: "", message: "" });
 
     try {
-      const response = await fetch("http://localhost:8000/api/contact/create.php",{
+      const response = await fetch(
+        "http://localhost:8000/api/contact/create.php",
+        {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -57,7 +85,9 @@ export default function ContactoPage() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || "No se pudo enviar el mensaje");
+        throw new Error(
+          result.message || "No se pudo enviar el mensaje"
+        );
       }
 
       setFeedback({
@@ -65,8 +95,12 @@ export default function ContactoPage() {
         message: result.message,
       });
 
-      // Limpiar el formulario después de guardar
-      setFormData({ name: "", email: "", phone: "", message: "",});
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+      });
     } catch (error) {
       setFeedback({
         type: "error",
@@ -105,7 +139,6 @@ export default function ContactoPage() {
       {/* Contacto */}
       <section className="py-20">
         <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-2">
-
           {/* Información */}
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.3em] text-zinc-500">
@@ -139,7 +172,9 @@ export default function ContactoPage() {
 
               <div>
                 <h3 className="font-semibold text-zinc-900">Ubicación</h3>
-                <p className="mt-1 text-zinc-500">San José, Costa Rica</p>
+                <p className="mt-1 text-zinc-500">
+                  San José, Costa Rica
+                </p>
               </div>
             </div>
           </div>
@@ -153,6 +188,24 @@ export default function ContactoPage() {
             <p className="mt-2 text-sm leading-6 text-zinc-500">
               Completa el formulario y nos pondremos en contacto contigo.
             </p>
+
+            {propertyTitle && (
+              <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Propiedad de interés
+                </p>
+
+                <p className="mt-2 font-semibold text-zinc-900">
+                  {propertyTitle}
+                </p>
+
+                {propertyId && (
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Referencia: #{propertyId}
+                  </p>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               <div>
@@ -234,7 +287,7 @@ export default function ContactoPage() {
                 />
               </div>
 
-              {/* Mensaje de respuesta */}
+              {/* Respuesta del servidor */}
               {feedback.message && (
                 <p
                   role="status"

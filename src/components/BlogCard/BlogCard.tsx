@@ -1,3 +1,4 @@
+
 import type { BlogPropiedad } from "../../types";
 import { getImageUrl } from "@/lib/api";
 import { Link } from "react-router-dom";
@@ -35,7 +36,8 @@ export default function BlogCard({ blog }: BlogCardProps) {
 
         <Link
           to={`/blog/${blog.id}`}
-          className="mt-6 text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-500">
+          className="mt-6 inline-block text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-500"
+        >
           Leer artículo →
         </Link>
       </div>

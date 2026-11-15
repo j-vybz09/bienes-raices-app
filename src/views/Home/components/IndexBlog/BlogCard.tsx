@@ -1,4 +1,3 @@
-
 import type { BlogPropiedad } from "../../../../types";
 import { getImageUrl } from "@/lib/api";
 

@@ -21,7 +21,12 @@ const initialForm: PropertyInput = {
 };
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+];
 
 export default function PropertyFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -103,7 +108,7 @@ export default function PropertyFormPage() {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setSelectedImage(null);
       event.target.value = "";
-      setError("Formato no permitido. Selecciona una imagen JPG, PNG o WebP.");
+      setError("Formato no permitido. Selecciona una imagen JPG, PNG, WebP o AVIF.");
       return;
     }
 
@@ -222,12 +227,15 @@ export default function PropertyFormPage() {
               Imagen de la propiedad
             </label>
             <input
-              id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp"
+              id="image"
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif,.avif"
               onChange={handleImageChange}
               className="block w-full cursor-pointer rounded-xl border border-zinc-200 p-3 text-sm text-zinc-600 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
             />
             <p className="mt-2 text-xs text-zinc-400">
-              Formatos permitidos: JPG, PNG y WebP. Tamaño máximo: 10 MB.
+              Formatos permitidos: JPG, PNG, WebP y AVIF. Tamaño máximo: 10 MB.
               {isEditing && " Si no seleccionas otra imagen, se conservará la actual."}
             </p>
           </div>

@@ -164,7 +164,7 @@ export default function NosotrosPage() {
               </div>
 
               {/* ESCRITORIO: SCROLLSTACK */}
-              <div className="hidden h-[650px] w-full min-w-0 lg:block">
+              <div className="hidden h-162.5 w-full min-w-0 lg:block">
                 <ScrollStack>
 
                   {/* TARJETA 1 */}

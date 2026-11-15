@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . "/../config/auth.php";
@@ -90,7 +89,8 @@ try {
     $allowedMimeTypes = [
         "image/jpeg" => "jpg",
         "image/png" => "png",
-        "image/webp" => "webp"
+        "image/webp" => "webp",
+        "image/avif" => "avif"
     ];
 
     if (!isset($allowedMimeTypes[$mimeType])) {
@@ -98,7 +98,7 @@ try {
 
         echo json_encode([
             "success" => false,
-            "message" => "Formato no permitido. Utiliza JPG, PNG o WebP."
+            "message" => "Formato no permitido. Utiliza JPG, PNG, WebP o AVIF."
         ], JSON_UNESCAPED_UNICODE);
 
         exit;
