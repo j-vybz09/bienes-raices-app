@@ -1,8 +1,8 @@
 <?php
 
 return [
-    "host" => "127.0.0.1",
-    "dbname" => "bienes_raices",
-    "username" => "root",
-    "password" => "root"
+    "host" => "localhost",
+    "dbname" => "NOMBRE_BASE_DATOS",
+    "username" => "USUARIO_MYSQL",
+    "password" => "CONTRASENA_MYSQL"
 ];

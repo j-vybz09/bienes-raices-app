@@ -5,10 +5,17 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "/bienes-raices-app/",
+
+  // GitHub Pages utiliza una subruta.
+  // DOM Cloud utiliza la raíz del dominio.
+  base:
+    process.env.GITHUB_ACTIONS === "true"
+      ? "/bienes-raices-app/"
+      : "/",
+
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 });
