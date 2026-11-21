@@ -1,25 +1,44 @@
+
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import LightRays from "./LightRays";
-import { useMemo } from "react";
+
+const links = [
+  { to: "/", label: "Inicio" },
+  { to: "/nosotros", label: "Nosotros" },
+  { to: "/anuncios", label: "Anuncios" },
+  { to: "/blog", label: "Blog" },
+  { to: "/contacto", label: "Contacto" },
+];
 
 export default function Header() {
   const { pathname } = useLocation();
+  const isHome = pathname === "/";
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const isHome = useMemo(() => pathname === "/", [pathname]);
+  // Enlaces del navbar de inicio.
+  // Todos mantienen el mismo peso de fuente.
+  const homeLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `block rounded-lg px-3 py-2 text-sm transition-colors ${
+      isActive
+        ? "text-white"
+        : "text-white/65 hover:text-white"
+    }`;
 
   return (
     <header className="w-full">
       {isHome ? (
-        <section className="relative min-h-210 overflow-hidden bg-[#0d0b12]">
-          {/* Fondo */}
-          <div className="absolute inset-0 z-0">
+        <section className="relative isolate min-h-120 overflow-hidden bg-[#0d0b12] text-white sm:min-h-180 lg:min-h-210">
+
+          {/* Fondo de iluminación */}
+          <div className="pointer-events-none absolute inset-0 z-0">
             <LightRays
               raysOrigin="top-center"
               raysColor="#ffffff"
               raysSpeed={1}
               lightSpread={0.5}
               rayLength={3}
-              followMouse={true}
+              followMouse
               mouseInfluence={0.1}
               noiseAmount={0}
               distortion={0}
@@ -29,101 +48,93 @@ export default function Header() {
             />
           </div>
 
-          {/* NAVEGACIÓN */}
-          <div className="relative z-10 max-w-6xl mx-auto px-10 pt-10">
-            <div className="flex justify-between items-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md shadow-lg py-3 px-5">
-              <NavLink className="font-medium text-white" to="/">
+          {/* NAVBAR */}
+          <div className="relative z-20 mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 sm:pt-8 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 shadow-lg backdrop-blur-md sm:px-5">
+
+              {/* LOGO */}
+              <NavLink
+                className="shrink-0 text-sm font-semibold leading-tight text-white sm:text-base"
+                to="/"
+                onClick={() => setMenuOpen(false)}
+              >
                 Bienes Raíces App
               </NavLink>
 
-              <nav className="flex gap-3">
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-white"
-                      : "text-white/60 transition hover:text-white"
-                  }
-                  to="/"
-                >
-                  Inicio
-                </NavLink>
+              {/* BOTÓN MÓVIL */}
+              <button
+                type="button"
+                aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/20 text-white transition hover:bg-white/10 md:hidden"
+              >
+                <span className="text-2xl leading-none">
+                  {menuOpen ? "×" : "☰"}
+                </span>
+              </button>
 
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-white"
-                      : "text-white/60 transition hover:text-white"
-                  }
-                  to="/nosotros"
-                >
-                  Nosotros
-                </NavLink>
-
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-white"
-                      : "text-white/60 transition hover:text-white"
-                  }
-                  to="/anuncios"
-                >
-                  Anuncios
-                </NavLink>
-
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-white"
-                      : "text-white/60 transition hover:text-white"
-                  }
-                  to="/blog"
-                >
-                  Blog
-                </NavLink>
-
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-white"
-                      : "text-white/60 transition hover:text-white"
-                  }
-                  to="/contacto"
-                >
-                  Contacto
-                </NavLink>
+              {/* NAVEGACIÓN ESCRITORIO */}
+              <nav className="hidden shrink-0 items-center gap-1 md:flex">
+                {links.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.to === "/"}
+                    className={homeLinkClass}
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
               </nav>
+
+              {/* NAVEGACIÓN MÓVIL */}
+              {menuOpen && (
+                <nav className="basis-full border-t border-white/10 pt-2 md:hidden">
+                  {links.map((link) => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      end={link.to === "/"}
+                      onClick={() => setMenuOpen(false)}
+                      className={homeLinkClass}
+                    >
+                      {link.label}
+                    </NavLink>
+                  ))}
+                </nav>
+              )}
             </div>
           </div>
 
           {/* HERO */}
-          <div className="relative z-10 flex min-h-150 items-center justify-center">
-            <div className="max-w-3xl px-6 text-center">
-              <p className="mb-4 text-sm font-medium uppercase tracking-widest text-white/60">
+          <div className="relative z-10 flex min-h-142.5 items-center justify-center px-4 py-20 sm:min-h-152.5 sm:px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-white/60 sm:text-sm sm:tracking-widest">
                 Encuentra tu próximo hogar
               </p>
 
-              <h1 className="text-5xl font-bold tracking-tight text-white md:text-7xl">
-                Encuentra el lugar
-                <br />
-                donde quieres vivir
+              <h1 className="text-4xl font-bold leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                Encuentra el lugar <br className="hidden sm:block" /> donde
+                quieres vivir
               </h1>
 
-              <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60">
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/65 sm:mt-6 sm:text-lg">
                 Explora propiedades, encuentra tu próximo hogar y descubre
                 oportunidades inmobiliarias.
               </p>
 
-              <div className="mt-8 flex justify-center gap-4">
+              <div className="mt-8 flex flex-col justify-center gap-3 min-[420px]:flex-row min-[420px]:gap-4">
                 <NavLink
                   to="/anuncios"
-                  className="rounded-xl bg-white px-6 py-3 font-medium text-black transition hover:bg-white/90"
+                  className="rounded-xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:bg-white/90 sm:text-base"
                 >
                   Ver propiedades
                 </NavLink>
 
                 <NavLink
                   to="/nosotros"
-                  className="rounded-xl border border-white/20 px-6 py-3 font-medium text-white transition hover:bg-white/10"
+                  className="rounded-xl border border-white/20 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10 sm:text-base"
                 >
                   Conocer más
                 </NavLink>
@@ -132,77 +143,74 @@ export default function Header() {
           </div>
         </section>
       ) : (
-        <>
-          <div className="relative z-10 mx-auto max-w-6xl px-10 pt-10">
-            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-5 py-3 shadow-md">
-              <NavLink className="font-medium text-zinc-900" to="/">
-                Bienes Raíces App
-              </NavLink>
+        /* NAVBAR DE LAS DEMÁS PÁGINAS */
+        <div className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6 sm:pt-7 lg:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-md sm:px-5">
 
-              <nav className="flex gap-4">
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "font-medium text-zinc-900"
-                      : "text-zinc-500 transition hover:text-zinc-900"
-                  }
-                  to="/"
-                >
-                  Inicio
-                </NavLink>
+            <NavLink
+              className="shrink-0 text-sm font-semibold text-zinc-900 sm:text-base"
+              to="/"
+              onClick={() => setMenuOpen(false)}
+            >
+              Bienes Raíces App
+            </NavLink>
 
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "font-medium text-zinc-900"
-                      : "text-zinc-500 transition hover:text-zinc-900"
-                  }
-                  to="/nosotros"
-                >
-                  Nosotros
-                </NavLink>
+            <button
+              type="button"
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200 text-zinc-800 transition hover:bg-zinc-50 md:hidden"
+            >
+              <span className="text-2xl leading-none">
+                {menuOpen ? "×" : "☰"}
+              </span>
+            </button>
 
+            <nav className="hidden shrink-0 items-center gap-1 md:flex">
+              {links.map((link) => (
                 <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === "/"}
                   className={({ isActive }) =>
-                    isActive
-                      ? "font-medium text-zinc-900"
-                      : "text-zinc-500 transition hover:text-zinc-900"
+                    `rounded-lg px-3 py-2 text-sm transition ${
+                      isActive
+                        ? "text-zinc-900"
+                        : "text-zinc-500 hover:text-zinc-900"
+                    }`
                   }
-                  to="/anuncios"
                 >
-                  Anuncios
+                  {link.label}
                 </NavLink>
+              ))}
+            </nav>
 
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "font-medium text-zinc-900"
-                      : "text-zinc-500 transition hover:text-zinc-900"
-                  }
-                  to="/blog"
-                >
-                  Blog
-                </NavLink>
-
-                <NavLink
-                  className={({ isActive }) =>
-                    isActive
-                      ? "font-medium text-zinc-900"
-                      : "text-zinc-500 transition hover:text-zinc-900"
-                  }
-                  to="/contacto"
-                >
-                  Contacto
-                </NavLink>
+            {menuOpen && (
+              <nav className="basis-full border-t border-zinc-100 pt-2 md:hidden">
+                {links.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    end={link.to === "/"}
+                    onClick={() => setMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `block rounded-lg px-3 py-2 text-sm transition ${
+                        isActive
+                          ? "text-zinc-900"
+                          : "text-zinc-500 hover:text-zinc-900"
+                      }`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
               </nav>
-            </div>
+            )}
           </div>
 
-          {/* Separador */}
-          <div className="mx-auto mt-6 max-w-6xl px-10">
-            <div className="h-px w-full bg-zinc-200" />
-          </div>
-        </>
+          <div className="mt-5 h-px w-full bg-zinc-200" />
+        </div>
       )}
     </header>
   );

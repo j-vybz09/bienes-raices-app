@@ -1,14 +1,47 @@
+
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Propiedades } from "../../data/properties";
+import { getProperty, getImageUrl } from "@/lib/api";
+import type { Propiedad } from "../../types";
 
 export default function PropertyDetailPage() {
   const { id } = useParams();
 
-  const propiedad = Propiedades.find(
-    (propiedad) => propiedad.id === Number(id),
-  );
+  const [propiedad, setPropiedad] = useState<Propiedad | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!propiedad) {
+  useEffect(() => {
+    async function loadProperty() {
+      if (!id) {
+        setError("Propiedad no encontrada");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getProperty(Number(id));
+        setPropiedad(data);
+      } catch (error) {
+        setError("No se pudo cargar la propiedad");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProperty();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-white">
+        <p className="text-zinc-500">Cargando propiedad...</p>
+      </main>
+    );
+  }
+
+  if (error || !propiedad) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-6">
         <div className="text-center">
@@ -37,7 +70,7 @@ export default function PropertyDetailPage() {
       <section className="relative">
         <div className="h-105 w-full md:h-140">
           <img
-            src={propiedad.image}
+            src={getImageUrl(propiedad.image)}
             alt={propiedad.title}
             className="h-full w-full object-cover"
           />
@@ -71,7 +104,10 @@ export default function PropertyDetailPage() {
                   </p>
 
                   <p className="mt-2 text-4xl font-semibold text-zinc-950">
-                    ${propiedad.price}
+                    ${Number(propiedad.price).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </p>
                 </div>
 
@@ -132,12 +168,15 @@ export default function PropertyDetailPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="mt-6 w-full rounded-xl bg-zinc-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-zinc-800 active:scale-[0.98]"
+              {/* Solicitar información */}
+              <Link
+                to={`/contacto?property=${encodeURIComponent(
+                  propiedad.title
+                )}&propertyId=${propiedad.id}`}
+                className="mt-6 flex w-full items-center justify-center rounded-xl bg-zinc-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-zinc-800 active:scale-[0.98]"
               >
                 Solicitar información
-              </button>
+              </Link>
             </aside>
           </div>
         </div>

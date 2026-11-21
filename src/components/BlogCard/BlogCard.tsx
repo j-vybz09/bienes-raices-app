@@ -1,4 +1,6 @@
+
 import type { BlogPropiedad } from "../../types";
+import { getImageUrl } from "@/lib/api";
 import { Link } from "react-router-dom";
 
 type BlogCardProps = {
@@ -13,7 +15,7 @@ export default function BlogCard({ blog }: BlogCardProps) {
       <div className="overflow-hidden">
         <img
           className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          src={image}
+          src={getImageUrl(image)}
           alt={title}
         />
       </div>
@@ -34,7 +36,8 @@ export default function BlogCard({ blog }: BlogCardProps) {
 
         <Link
           to={`/blog/${blog.id}`}
-          className="mt-6 text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-500">
+          className="mt-6 inline-block text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-500"
+        >
           Leer artículo →
         </Link>
       </div>
