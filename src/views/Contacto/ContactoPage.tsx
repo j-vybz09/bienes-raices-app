@@ -1,6 +1,7 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { createContactMessage } from "@/lib/api";
 
 type ContactForm = {
   name: string;
@@ -20,38 +21,32 @@ export default function ContactoPage() {
   const propertyTitle = searchParams.get("property");
   const propertyId = searchParams.get("propertyId");
 
-  // Estado del formulario
-  const [formData, setFormData] = useState<ContactForm>({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
+  // Mensaje inicial según la propiedad desde la que llega el visitante.
+  const [formData, setFormData] = useState<ContactForm>(() => {
+    const propertyMessage = propertyTitle
+      ? propertyId
+        ? `Hola, quisiera recibir más información sobre la propiedad "${propertyTitle}" (ID: ${propertyId}).`
+        : `Hola, quisiera recibir más información sobre la propiedad "${propertyTitle}".`
+      : "";
+
+    return {
+      name: "",
+      email: "",
+      phone: "",
+      message: propertyMessage,
+    };
   });
 
-  // Estado del envío
+  // Estado del envío.
   const [loading, setLoading] = useState(false);
 
-  // Estado de respuesta
+  // Estado de respuesta.
   const [feedback, setFeedback] = useState<Feedback>({
     type: "",
     message: "",
   });
 
-  // Detectar si el visitante viene desde una propiedad
-  useEffect(() => {
-    if (!propertyTitle) return;
-
-    const propertyMessage = propertyId
-      ? `Hola, quisiera recibir más información sobre la propiedad "${propertyTitle}" (ID: ${propertyId}).`
-      : `Hola, quisiera recibir más información sobre la propiedad "${propertyTitle}".`;
-
-    setFormData((previousData) => ({
-      ...previousData,
-      message: propertyMessage,
-    }));
-  }, [propertyTitle, propertyId]);
-
-  // Actualizar los campos
+  // Actualizar los campos.
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -63,7 +58,7 @@ export default function ContactoPage() {
     }));
   };
 
-  // Enviar el formulario al backend
+  // Enviar el formulario al backend.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -71,28 +66,11 @@ export default function ContactoPage() {
     setFeedback({ type: "", message: "" });
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/contact/create.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.message || "No se pudo enviar el mensaje"
-        );
-      }
+      const message = await createContactMessage(formData);
 
       setFeedback({
         type: "success",
-        message: result.message,
+        message,
       });
 
       setFormData({

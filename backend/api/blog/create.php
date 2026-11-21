@@ -1,64 +1,124 @@
+
 <?php
 
+// CORS y autenticación.
 require_once __DIR__ . "/../../config/auth.php";
 requireAdmin();
 
+// Conexión a MySQL.
 require_once __DIR__ . "/../../config/database.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
+// Solo permitimos POST.
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     http_response_code(405);
+
     echo json_encode([
         "success" => false,
         "message" => "Método no permitido. Utiliza POST."
     ], JSON_UNESCAPED_UNICODE);
+
     exit;
 }
 
+// Recibimos el JSON desde React.
 $data = json_decode(file_get_contents("php://input"), true);
 
-$requiredFields = ["image", "title", "date", "author", "description", "content"];
+$requiredFields = [
+    "image",
+    "title",
+    "date",
+    "author",
+    "description",
+    "content"
+];
 
+// Validamos el cuerpo.
 if (!is_array($data)) {
     http_response_code(400);
+
     echo json_encode([
         "success" => false,
         "message" => "El cuerpo de la solicitud no contiene JSON válido."
     ], JSON_UNESCAPED_UNICODE);
+
     exit;
 }
 
+// Validamos los campos obligatorios.
 foreach ($requiredFields as $field) {
-    if (!isset($data[$field]) || !is_string($data[$field]) || trim($data[$field]) === "") {
+    if (
+        !isset($data[$field]) ||
+        !is_string($data[$field]) ||
+        trim($data[$field]) === ""
+    ) {
         http_response_code(400);
+
         echo json_encode([
             "success" => false,
             "message" => "El campo " . $field . " es obligatorio."
         ], JSON_UNESCAPED_UNICODE);
+
         exit;
     }
 }
 
+// Validamos la fecha YYYY-MM-DD.
+$date = trim($data["date"]);
+$dateObject = DateTime::createFromFormat("!Y-m-d", $date);
+
+if (!$dateObject || $dateObject->format("Y-m-d") !== $date) {
+    http_response_code(400);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "La fecha no es válida. Utiliza YYYY-MM-DD."
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+// Limpiamos los valores.
+$image = trim($data["image"]);
+$title = trim($data["title"]);
+$author = trim($data["author"]);
+$description = trim($data["description"]);
+$content = trim($data["content"]);
+
 try {
     $sql = "
-        INSERT INTO blog_posts
-            (image, title, date, author, description, content)
-        VALUES
-            (:image, :title, :date, :author, :description, :content)
+        INSERT INTO blog_posts (
+            image,
+            title,
+            date,
+            author,
+            description,
+            content
+        )
+        VALUES (
+            :image,
+            :title,
+            :date,
+            :author,
+            :description,
+            :content
+        )
     ";
 
     $stmt = $pdo->prepare($sql);
+
     $stmt->execute([
-        ":image" => $data["image"],
-        ":title" => $data["title"],
-        ":date" => $data["date"],
-        ":author" => $data["author"],
-        ":description" => $data["description"],
-        ":content" => $data["content"]
+        ":image" => $image,
+        ":title" => $title,
+        ":date" => $date,
+        ":author" => $author,
+        ":description" => $description,
+        ":content" => $content
     ]);
 
     http_response_code(201);
+
     echo json_encode([
         "success" => true,
         "message" => "Publicación creada correctamente.",
@@ -66,7 +126,10 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
+    error_log($e->getMessage());
+
     http_response_code(500);
+
     echo json_encode([
         "success" => false,
         "message" => "Error al crear la publicación."

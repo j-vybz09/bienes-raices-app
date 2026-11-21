@@ -1,88 +1,87 @@
+
 <?php
 
+// Cargamos CORS y autenticación.
 require_once __DIR__ . "/../../config/auth.php";
-requireAdmin();
 
-// Importamos la conexión a la base de datos.
-require_once __DIR__ . '/../../config/database.php';
-
-// Importamos la función para enviar respuestas JSON.
-require_once __DIR__ . '/../../helpers/response.php';
-
-// Permitimos únicamente solicitudes DELETE.
-if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+// Solo permitimos solicitudes DELETE.
+if ($_SERVER["REQUEST_METHOD"] !== "DELETE") {
     http_response_code(405);
 
     echo json_encode([
-        'success' => false,
-        'message' => 'Método HTTP no permitido.'
-    ]);
+        "success" => false,
+        "message" => "Método HTTP no permitido."
+    ], JSON_UNESCAPED_UNICODE);
 
     exit;
 }
 
-// Obtenemos el ID enviado mediante la URL.
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+// Verificamos la sesión administrativa.
+requireAdmin();
 
-// Verificamos que el ID sea válido.
-if (!$id || $id <= 0) {
-    http_response_code(400);
-
-    echo json_encode([
-        'success' => false,
-        'message' => 'Debes proporcionar un ID válido.'
-    ]);
-
-    exit;
-}
+// Conectamos con MySQL.
+require_once __DIR__ . "/../../config/database.php";
 
 try {
 
-    // Preparamos la consulta SQL para eliminar el mensaje.
-    $sql = "DELETE FROM contact_messages WHERE id = :id";
+    // Obtenemos y validamos el ID desde la URL.
+    $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
-    $stmt = $pdo->prepare($sql);
-
-    // Asociamos el ID recibido con el parámetro de la consulta.
-    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-
-    // Ejecutamos la consulta.
-    $stmt->execute();
-
-    // Comprobamos si realmente se eliminó algún registro.
-    if ($stmt->rowCount() === 0) {
-        http_response_code(404);
+    if (!$id || $id <= 0) {
+        http_response_code(400);
 
         echo json_encode([
-            'success' => false,
-            'message' => 'No se encontró el mensaje solicitado.'
-        ]);
+            "success" => false,
+            "message" => "Debes proporcionar un ID válido."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
+    // Preparamos la consulta para eliminar el mensaje.
+    $sql = "
+        DELETE FROM contact_messages
+        WHERE id = :id
+    ";
+
+    $stmt = $pdo->prepare($sql);
+
+    $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+
+    $stmt->execute();
+
+    // Comprobamos si realmente se eliminó un registro.
+    if ($stmt->rowCount() === 0) {
+        http_response_code(404);
+
+        echo json_encode([
+            "success" => false,
+            "message" => "No se encontró el mensaje solicitado."
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+
+    // Devolvemos la confirmación.
     http_response_code(200);
 
-    // Devolvemos una respuesta exitosa.
     echo json_encode([
-        'success' => true,
-        'message' => 'Mensaje eliminado correctamente.',
-        'data' => [
-            'id' => $id
+        "success" => true,
+        "message" => "Mensaje eliminado correctamente.",
+        "data" => [
+            "id" => (int) $id
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 
-    exit;
-    
+} catch (Throwable $e) {
 
-} catch (PDOException $e) {
-    http_response_code(500);
-
-    json_encode([
-        'success' => false,
-        'message' => 'Error al eliminar el mensaje.'
-    ]);
     // Registramos el error internamente.
     error_log($e->getMessage());
 
+    http_response_code(500);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Error al eliminar el mensaje."
+    ], JSON_UNESCAPED_UNICODE);
 }

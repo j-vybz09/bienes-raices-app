@@ -1,5 +1,7 @@
+
 <?php
 
+// Cargamos CORS.
 require_once __DIR__ . "/../config/auth.php";
 
 header("Content-Type: application/json; charset=UTF-8");
@@ -16,10 +18,10 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     exit;
 }
 
-// Verificamos que exista una sesión de administrador.
+// Verificamos la sesión administrativa.
 requireAdmin();
 
-// Comprobamos que se haya enviado un archivo.
+// Comprobamos que se haya enviado una imagen.
 if (!isset($_FILES["image"])) {
     http_response_code(400);
 
@@ -33,14 +35,13 @@ if (!isset($_FILES["image"])) {
 
 $file = $_FILES["image"];
 
-// Comprobamos los errores de subida.
+// Comprobamos errores de subida.
 if ($file["error"] !== UPLOAD_ERR_OK) {
     http_response_code(400);
 
     echo json_encode([
         "success" => false,
-        "message" => "Ocurrió un error al subir la imagen.",
-        "upload_error" => $file["error"]
+        "message" => "Ocurrió un error al subir la imagen."
     ], JSON_UNESCAPED_UNICODE);
 
     exit;
@@ -49,7 +50,7 @@ if ($file["error"] !== UPLOAD_ERR_OK) {
 // Límite máximo de 10 MB.
 $maxSize = 10 * 1024 * 1024;
 
-if ($file["size"] > $maxSize) {
+if ($file["size"] <= 0 || $file["size"] > $maxSize) {
     http_response_code(413);
 
     echo json_encode([
@@ -60,7 +61,7 @@ if ($file["size"] > $maxSize) {
     exit;
 }
 
-// Identificamos el destino: propiedades o blog.
+// Identificamos el destino autorizado.
 $type = $_POST["type"] ?? "";
 
 $allowedTypes = [
@@ -80,8 +81,7 @@ if (!array_key_exists($type, $allowedTypes)) {
 }
 
 try {
-
-    // Detectamos el MIME real del archivo.
+    // Detectamos el MIME real.
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mimeType = $finfo->file($file["tmp_name"]);
 
@@ -104,7 +104,7 @@ try {
         exit;
     }
 
-    // Validamos que realmente sea una imagen.
+    // Comprobamos que sea una imagen válida.
     $imageInfo = getimagesize($file["tmp_name"]);
 
     if ($imageInfo === false) {
@@ -130,10 +130,9 @@ try {
         exit;
     }
 
-    // Obtenemos la carpeta correspondiente.
+    // Determinamos la carpeta de destino.
     $folder = $allowedTypes[$type];
 
-    // Ruta física: backend/uploads/blog o backend/uploads/properties.
     $uploadDirectory = __DIR__ . "/../uploads/" . $folder . "/";
 
     // Creamos la carpeta si no existe.
@@ -146,7 +145,7 @@ try {
         );
     }
 
-    // Generamos un nombre único.
+    // Generamos un nombre aleatorio y seguro.
     $extension = $allowedMimeTypes[$mimeType];
     $filename = bin2hex(random_bytes(16)) . "." . $extension;
 
@@ -159,7 +158,7 @@ try {
         );
     }
 
-    // Ruta que almacenaremos en MySQL.
+    // Ruta relativa que guardaremos en MySQL.
     $imagePath = "uploads/" . $folder . "/" . $filename;
 
     http_response_code(201);
@@ -171,12 +170,12 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
+    error_log($e->getMessage());
 
     http_response_code(500);
 
     echo json_encode([
         "success" => false,
-        "message" => "Error al procesar la imagen.",
-        "error" => $e->getMessage()
+        "message" => "Error al procesar la imagen."
     ], JSON_UNESCAPED_UNICODE);
 }

@@ -1,8 +1,10 @@
 <?php
 
+// CORS y autenticación administrativa.
 require_once __DIR__ . "/../../config/auth.php";
 requireAdmin();
 
+// Conexión a MySQL y helper de imágenes.
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../helpers/images.php";
 
@@ -35,11 +37,16 @@ if (!$id || $id < 1) {
 }
 
 try {
-    // Buscamos la propiedad y recuperamos su imagen.
+
+    // Iniciamos una transacción.
+    $pdo->beginTransaction();
+
+    // Buscamos la propiedad y su imagen.
     $find = $pdo->prepare("
         SELECT image
         FROM properties
         WHERE id = :id
+        LIMIT 1
     ");
 
     $find->execute([
@@ -49,6 +56,9 @@ try {
     $property = $find->fetch(PDO::FETCH_ASSOC);
 
     if (!$property) {
+
+        $pdo->rollBack();
+
         http_response_code(404);
 
         echo json_encode([
@@ -59,7 +69,7 @@ try {
         exit;
     }
 
-    // Eliminamos primero el registro de MySQL.
+    // Eliminamos el registro de MySQL.
     $stmt = $pdo->prepare("
         DELETE FROM properties
         WHERE id = :id
@@ -69,7 +79,10 @@ try {
         ":id" => $id
     ]);
 
-    // Después eliminamos la imagen física.
+    // Confirmamos la eliminación en MySQL.
+    $pdo->commit();
+
+    // Eliminamos la imagen física después del commit.
     $imageDeleted = deleteUploadedImage(
         $property["image"],
         "properties"
@@ -85,6 +98,14 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
+
+    // Si la transacción sigue activa, la revertimos.
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    error_log($e->getMessage());
+
     http_response_code(500);
 
     echo json_encode([

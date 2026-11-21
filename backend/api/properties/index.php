@@ -1,12 +1,15 @@
 <?php
 
+// Configuración CORS.
 require_once __DIR__ . "/../../config/cors.php";
-require_once "../../config/cors.php";
-require_once "../../config/database.php";
+
+// Conexión a la base de datos.
+require_once __DIR__ . "/../../config/database.php";
 
 try {
 
-    $stmt = $pdo->query("
+    // Consultamos todas las propiedades.
+    $sql = "
         SELECT
             id,
             image,
@@ -18,26 +21,27 @@ try {
             bedrooms
         FROM properties
         ORDER BY id DESC
-    ");
+    ";
+
+    $stmt = $pdo->query($sql);
 
     $properties = $stmt->fetchAll();
 
-    header("Content-Type: application/json");
-
+    // Devolvemos las propiedades.
     echo json_encode([
         "success" => true,
         "data" => $properties
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
+
+    // Registramos el error en el servidor.
+    error_log($e->getMessage());
 
     http_response_code(500);
 
-    header("Content-Type: application/json");
-
     echo json_encode([
         "success" => false,
-        "message" => "Error al obtener las propiedades",
-        "error" => $e->getMessage()
-    ]);
+        "message" => "Error al obtener las propiedades."
+    ], JSON_UNESCAPED_UNICODE);
 }

@@ -1,29 +1,44 @@
+
 <?php
 
+// Cargamos CORS y autenticación.
 require_once __DIR__ . "/../../config/auth.php";
+
+// Solo permitimos solicitudes PUT.
+if ($_SERVER["REQUEST_METHOD"] !== "PUT") {
+    http_response_code(405);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Método no permitido."
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+// Verificamos la sesión administrativa.
 requireAdmin();
 
-header("Content-Type: application/json; charset=utf-8");
-
-require_once "../../config/database.php";
+// Conectamos con MySQL.
+require_once __DIR__ . "/../../config/database.php";
 
 try {
 
-    // 1. Obtener el ID desde la URL
+    // Obtenemos y validamos el ID desde la URL.
     $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
-    if (!$id) {
+    if (!$id || $id <= 0) {
         http_response_code(400);
 
         echo json_encode([
             "success" => false,
-            "message" => "El ID del mensaje es obligatorio"
-        ]);
+            "message" => "Debes proporcionar un ID válido."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // 2. Obtener los datos enviados en formato JSON
+    // Recibimos los datos JSON enviados desde React.
     $data = json_decode(
         file_get_contents("php://input"),
         true
@@ -34,36 +49,54 @@ try {
 
         echo json_encode([
             "success" => false,
-            "message" => "No se recibieron datos válidos"
-        ]);
+            "message" => "No se recibieron datos válidos."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // 3. Validar que se haya enviado el estado
+    // Comprobamos que se haya enviado el estado.
     if (
-        !array_key_exists("status", $data) ||
-        !is_string($data["status"]) ||
-        trim($data["status"]) === ""
+        !isset($data["status"]) ||
+        !is_string($data["status"])
     ) {
         http_response_code(400);
 
         echo json_encode([
             "success" => false,
-            "message" => "El estado del mensaje es obligatorio"
-        ]);
+            "message" => "El estado del mensaje es obligatorio."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // 4. Limpiar el valor recibido
     $status = trim($data["status"]);
 
-    // 5. Comprobar que el mensaje existe
+    // Estados permitidos por la aplicación.
+    $allowedStatuses = [
+        "pending",
+        "read",
+        "answered"
+    ];
+
+    // Validamos que el estado sea uno de los permitidos.
+    if (!in_array($status, $allowedStatuses, true)) {
+        http_response_code(400);
+
+        echo json_encode([
+            "success" => false,
+            "message" => "El estado enviado no es válido."
+        ], JSON_UNESCAPED_UNICODE);
+
+        exit;
+    }
+
+    // Comprobamos que el mensaje exista.
     $checkSql = "
         SELECT id
         FROM contact_messages
         WHERE id = :id
+        LIMIT 1
     ";
 
     $checkStmt = $pdo->prepare($checkSql);
@@ -77,13 +110,13 @@ try {
 
         echo json_encode([
             "success" => false,
-            "message" => "El mensaje de contacto no existe"
-        ]);
+            "message" => "El mensaje de contacto no existe."
+        ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // 6. Actualizar únicamente el estado
+    // Actualizamos el estado del mensaje.
     $sql = "
         UPDATE contact_messages
         SET status = :status
@@ -97,23 +130,25 @@ try {
         ":id" => $id
     ]);
 
-    // 7. Enviar la respuesta
+    // Devolvemos la respuesta al frontend.
     echo json_encode([
         "success" => true,
-        "message" => "Estado del mensaje actualizado correctamente",
+        "message" => "Estado del mensaje actualizado correctamente.",
         "data" => [
-            "id" => $id,
+            "id" => (int) $id,
             "status" => $status
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
+
+    // Registramos el error internamente.
+    error_log($e->getMessage());
 
     http_response_code(500);
 
     echo json_encode([
         "success" => false,
-        "message" => "Error al actualizar el estado del mensaje",
-        "error" => $e->getMessage()
-    ]);
+        "message" => "Error al actualizar el estado del mensaje."
+    ], JSON_UNESCAPED_UNICODE);
 }

@@ -1,6 +1,10 @@
-
 import { useEffect, useState } from "react";
-import { getBlogs, getContacts, getProperties, type ContactMessage } from "../../lib/api";
+import {
+  getBlogs,
+  getContacts,
+  getProperties,
+  type ContactMessage,
+} from "../../lib/api";
 
 type DashboardData = {
   properties: number;
@@ -9,22 +13,24 @@ type DashboardData = {
   recentContacts: ContactMessage[];
 };
 
-export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData>({
-    properties: 0,
-    blogs: 0,
-    contacts: 0,
-    recentContacts: [],
-  });
+const initialData: DashboardData = {
+  properties: 0,
+  blogs: 0,
+  contacts: 0,
+  recentContacts: [],
+};
 
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData>(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Actualización manual del Dashboard.
   async function loadDashboard() {
-    setLoading(true);
-    setError("");
-
     try {
+      setLoading(true);
+      setError("");
+
       const [properties, blogs, contacts] = await Promise.all([
         getProperties(),
         getBlogs(),
@@ -48,8 +54,46 @@ export default function DashboardPage() {
     }
   }
 
+  // Carga inicial sin actualizar el estado antes de completar las consultas.
   useEffect(() => {
-    loadDashboard();
+    let cancelled = false;
+
+    async function fetchDashboard() {
+      try {
+        const [properties, blogs, contacts] = await Promise.all([
+          getProperties(),
+          getBlogs(),
+          getContacts(),
+        ]);
+
+        if (!cancelled) {
+          setData({
+            properties: properties.length,
+            blogs: blogs.length,
+            contacts: contacts.length,
+            recentContacts: contacts.slice(0, 5),
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar los datos del Dashboard."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void fetchDashboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const statistics = [
@@ -127,6 +171,7 @@ export default function DashboardPage() {
           </div>
 
           <button
+            type="button"
             onClick={loadDashboard}
             className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800"
           >

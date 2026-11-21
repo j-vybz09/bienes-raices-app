@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -21,6 +22,7 @@ const initialForm: PropertyInput = {
 };
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -40,6 +42,7 @@ export default function PropertyFormPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // Cargar información de la propiedad cuando se está editando.
   useEffect(() => {
     if (!id) return;
 
@@ -49,6 +52,7 @@ export default function PropertyFormPage() {
         setError("");
 
         const property = await getProperty(Number(id));
+
         setForm({
           image: property.image,
           title: property.title,
@@ -69,20 +73,17 @@ export default function PropertyFormPage() {
       }
     };
 
-    loadProperty();
+    void loadProperty();
   }, [id]);
 
-  // Genera una vista previa local y libera la URL al cambiar o desmontar.
+  // Liberar las URL temporales cuando cambie la vista previa o se desmonte.
   useEffect(() => {
-    if (selectedImage) {
-      const objectUrl = URL.createObjectURL(selectedImage);
-      setPreviewUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-
-    setPreviewUrl(getImageUrl(form.image));
-    return undefined;
-  }, [selectedImage, form.image]);
+    return () => {
+      if (previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -102,24 +103,30 @@ export default function PropertyFormPage() {
 
     if (!file) {
       setSelectedImage(null);
+      setPreviewUrl("");
       return;
     }
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setSelectedImage(null);
+      setPreviewUrl("");
       event.target.value = "";
-      setError("Formato no permitido. Selecciona una imagen JPG, PNG, WebP o AVIF.");
+      setError(
+        "Formato no permitido. Selecciona una imagen JPG, PNG, WebP o AVIF."
+      );
       return;
     }
 
     if (file.size > MAX_IMAGE_SIZE) {
       setSelectedImage(null);
+      setPreviewUrl("");
       event.target.value = "";
       setError("La imagen no puede superar los 10 MB.");
       return;
     }
 
     setSelectedImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -140,7 +147,10 @@ export default function PropertyFormPage() {
         : form.image;
 
       // Después guardamos los datos y la ruta devuelta por PHP en MySQL.
-      const propertyData: PropertyInput = { ...form, image: imagePath };
+      const propertyData: PropertyInput = {
+        ...form,
+        image: imagePath,
+      };
 
       if (isEditing && id) {
         await updateProperty(Number(id), propertyData);
@@ -159,6 +169,8 @@ export default function PropertyFormPage() {
       setSaving(false);
     }
   };
+
+  const imagePreview = previewUrl || (form.image ? getImageUrl(form.image) : "");
 
   if (loading) {
     return (
@@ -199,31 +211,49 @@ export default function PropertyFormPage() {
       >
         <div className="space-y-5">
           <div>
-            <label htmlFor="title" className="mb-2 block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="title"
+              className="mb-2 block text-sm font-medium text-zinc-700"
+            >
               Título de la propiedad
             </label>
             <input
-              id="title" name="title" type="text" value={form.title}
-              onChange={handleChange} required maxLength={150}
+              id="title"
+              name="title"
+              type="text"
+              value={form.title}
+              onChange={handleChange}
+              required
+              maxLength={150}
               placeholder="Ej. Casa moderna en Escazú"
               className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-500"
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="mb-2 block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="description"
+              className="mb-2 block text-sm font-medium text-zinc-700"
+            >
               Descripción
             </label>
             <textarea
-              id="description" name="description" value={form.description}
-              onChange={handleChange} required rows={5}
+              id="description"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              required
+              rows={5}
               placeholder="Describe las características de la propiedad..."
               className="w-full resize-y rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-500"
             />
           </div>
 
           <div>
-            <label htmlFor="image" className="mb-2 block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="image"
+              className="mb-2 block text-sm font-medium text-zinc-700"
+            >
               Imagen de la propiedad
             </label>
             <input
@@ -236,55 +266,103 @@ export default function PropertyFormPage() {
             />
             <p className="mt-2 text-xs text-zinc-400">
               Formatos permitidos: JPG, PNG, WebP y AVIF. Tamaño máximo: 10 MB.
-              {isEditing && " Si no seleccionas otra imagen, se conservará la actual."}
+              {isEditing &&
+                " Si no seleccionas otra imagen, se conservará la actual."}
             </p>
           </div>
 
-          {previewUrl && (
+          {imagePreview && (
             <div>
-              <p className="mb-2 text-sm font-medium text-zinc-700">Vista previa</p>
+              <p className="mb-2 text-sm font-medium text-zinc-700">
+                Vista previa
+              </p>
               <img
-                src={previewUrl}
+                src={imagePreview}
                 alt="Vista previa de la propiedad"
                 className="h-52 w-full rounded-xl border border-zinc-200 object-cover"
-                onError={() => setPreviewUrl("")}
+                onError={() => {
+                  if (previewUrl) {
+                    setPreviewUrl("");
+                  }
+                }}
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="price" className="mb-2 block text-sm font-medium text-zinc-700">
+            <label
+              htmlFor="price"
+              className="mb-2 block text-sm font-medium text-zinc-700"
+            >
               Precio en dólares
             </label>
             <input
-              id="price" name="price" type="number" min="0" step="0.01"
-              value={form.price} onChange={handleChange} required
+              id="price"
+              name="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={handleChange}
+              required
               className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-500"
             />
           </div>
 
           <div className="grid gap-5 sm:grid-cols-3">
             <div>
-              <label htmlFor="bedrooms" className="mb-2 block text-sm font-medium text-zinc-700">Habitaciones</label>
+              <label
+                htmlFor="bedrooms"
+                className="mb-2 block text-sm font-medium text-zinc-700"
+              >
+                Habitaciones
+              </label>
               <input
-                id="bedrooms" name="bedrooms" type="number" min="0"
-                value={form.bedrooms} onChange={handleChange} required
+                id="bedrooms"
+                name="bedrooms"
+                type="number"
+                min="0"
+                value={form.bedrooms}
+                onChange={handleChange}
+                required
                 className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-500"
               />
             </div>
+
             <div>
-              <label htmlFor="bathrooms" className="mb-2 block text-sm font-medium text-zinc-700">Baños</label>
+              <label
+                htmlFor="bathrooms"
+                className="mb-2 block text-sm font-medium text-zinc-700"
+              >
+                Baños
+              </label>
               <input
-                id="bathrooms" name="bathrooms" type="number" min="0"
-                value={form.bathrooms} onChange={handleChange} required
+                id="bathrooms"
+                name="bathrooms"
+                type="number"
+                min="0"
+                value={form.bathrooms}
+                onChange={handleChange}
+                required
                 className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-500"
               />
             </div>
+
             <div>
-              <label htmlFor="garage" className="mb-2 block text-sm font-medium text-zinc-700">Garajes</label>
+              <label
+                htmlFor="garage"
+                className="mb-2 block text-sm font-medium text-zinc-700"
+              >
+                Garajes
+              </label>
               <input
-                id="garage" name="garage" type="number" min="0"
-                value={form.garage} onChange={handleChange} required
+                id="garage"
+                name="garage"
+                type="number"
+                min="0"
+                value={form.garage}
+                onChange={handleChange}
+                required
                 className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm outline-none focus:border-zinc-500"
               />
             </div>
@@ -292,7 +370,9 @@ export default function PropertyFormPage() {
         </div>
 
         {error && (
-          <p className="rounded-xl bg-red-50 p-4 text-sm text-red-600">{error}</p>
+          <p className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+            {error}
+          </p>
         )}
 
         <div className="flex flex-col-reverse justify-end gap-3 border-t border-zinc-100 pt-6 sm:flex-row">
@@ -302,13 +382,19 @@ export default function PropertyFormPage() {
           >
             Cancelar
           </Link>
+
           <button
-            type="submit" disabled={saving}
+            type="submit"
+            disabled={saving}
             className="rounded-xl bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving
-              ? selectedImage ? "Subiendo imagen y guardando..." : "Guardando..."
-              : isEditing ? "Guardar cambios" : "Registrar propiedad"}
+              ? selectedImage
+                ? "Subiendo imagen y guardando..."
+                : "Guardando..."
+              : isEditing
+                ? "Guardar cambios"
+                : "Registrar propiedad"}
           </button>
         </div>
       </form>

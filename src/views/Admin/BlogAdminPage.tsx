@@ -1,6 +1,6 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+
 import {
   getBlogs,
   createBlog,
@@ -10,6 +10,7 @@ import {
   uploadImage,
   type BlogInput,
 } from "../../lib/api";
+
 import type { BlogPropiedad } from "../../types";
 
 const initialForm: BlogInput = {
@@ -18,21 +19,25 @@ const initialForm: BlogInput = {
   date: new Date().toISOString().slice(0, 10),
   author: "Admin",
   description: "",
-  content: ""
+  content: "",
 };
 
 export default function BlogAdminPage() {
   const [blogs, setBlogs] = useState<BlogPropiedad[]>([]);
   const [form, setForm] = useState<BlogInput>(initialForm);
   const [editingId, setEditingId] = useState<number | null>(null);
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
+
+  const previewObjectUrl = useRef<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
 
+  // Carga inicial de publicaciones.
   const loadBlogs = async () => {
     try {
       setLoading(true);
@@ -51,23 +56,49 @@ export default function BlogAdminPage() {
     }
   };
 
+  // Evita actualizar estados si el componente se desmonta.
   useEffect(() => {
-    loadBlogs();
+    let cancelled = false;
+
+    const fetchInitialBlogs = async () => {
+      try {
+        const data = await getBlogs();
+
+        if (!cancelled) {
+          setBlogs(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "No fue posible cargar las publicaciones."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchInitialBlogs();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Genera una vista previa temporal y libera la URL al cambiar de archivo.
+  // Libera la URL temporal de la imagen al desmontar el componente.
   useEffect(() => {
-    if (selectedImage) {
-      const objectUrl = URL.createObjectURL(selectedImage);
-      setPreviewUrl(objectUrl);
+    return () => {
+      if (previewObjectUrl.current) {
+        URL.revokeObjectURL(previewObjectUrl.current);
+      }
+    };
+  }, []);
 
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-
-    setPreviewUrl(form.image ? getImageUrl(form.image) : "");
-    return undefined;
-  }, [selectedImage, form.image]);
-
+  // Actualiza los campos del formulario.
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -79,12 +110,21 @@ export default function BlogAdminPage() {
     }));
   };
 
+  // Selecciona y valida la imagen.
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+
     setError("");
+
+    // Liberamos cualquier vista previa temporal anterior.
+    if (previewObjectUrl.current) {
+      URL.revokeObjectURL(previewObjectUrl.current);
+      previewObjectUrl.current = null;
+    }
 
     if (!file) {
       setSelectedImage(null);
+      setPreviewUrl(form.image ? getImageUrl(form.image) : "");
       return;
     }
 
@@ -94,52 +134,79 @@ export default function BlogAdminPage() {
       "image/webp",
       "image/avif",
     ];
+
     const maxSize = 10 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       setSelectedImage(null);
+      setPreviewUrl(form.image ? getImageUrl(form.image) : "");
       event.target.value = "";
-      setError("Formato no permitido. Selecciona una imagen JPG, PNG, WebP o AVIF.");
+
+      setError(
+        "Formato no permitido. Selecciona una imagen JPG, PNG, WebP o AVIF."
+      );
+
       return;
     }
 
     if (file.size > maxSize) {
       setSelectedImage(null);
+      setPreviewUrl(form.image ? getImageUrl(form.image) : "");
       event.target.value = "";
+
       setError("La imagen no puede superar los 10 MB.");
+
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+
+    previewObjectUrl.current = objectUrl;
+
     setSelectedImage(file);
+    setPreviewUrl(objectUrl);
   };
 
+  // Limpia el formulario y sus recursos temporales.
   const resetForm = () => {
+    if (previewObjectUrl.current) {
+      URL.revokeObjectURL(previewObjectUrl.current);
+      previewObjectUrl.current = null;
+    }
+
     setForm(initialForm);
     setSelectedImage(null);
+    setPreviewUrl("");
     setEditingId(null);
     setShowForm(false);
     setError("");
   };
 
+  // Carga los datos de una publicación para editarla.
   const handleEdit = (blog: BlogPropiedad) => {
+    if (previewObjectUrl.current) {
+      URL.revokeObjectURL(previewObjectUrl.current);
+      previewObjectUrl.current = null;
+    }
+
     setForm({
       image: blog.image,
       title: blog.title,
       date: blog.date,
       author: blog.author,
       description: blog.description,
-      content: blog.content
+      content: blog.content,
     });
 
     setSelectedImage(null);
+    setPreviewUrl(getImageUrl(blog.image));
     setEditingId(blog.id);
     setShowForm(true);
     setError("");
   };
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
+  // Guarda una publicación nueva o actualiza una existente.
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!form.image && !selectedImage) {
@@ -151,7 +218,7 @@ export default function BlogAdminPage() {
       setSaving(true);
       setError("");
 
-      // La imagen se almacena en la carpeta exclusiva del blog.
+      // Si se seleccionó una imagen nueva, la subimos al servidor.
       const imagePath = selectedImage
         ? await uploadImage(selectedImage, "blog")
         : form.image;
@@ -180,6 +247,7 @@ export default function BlogAdminPage() {
     }
   };
 
+  // Elimina una publicación.
   const handleDelete = async (id: number) => {
     const confirmed = window.confirm(
       "¿Estás seguro de que deseas eliminar esta publicación?"
@@ -225,6 +293,8 @@ export default function BlogAdminPage() {
               resetForm();
             } else {
               setForm(initialForm);
+              setSelectedImage(null);
+              setPreviewUrl("");
               setEditingId(null);
               setError("");
               setShowForm(true);
@@ -333,7 +403,8 @@ export default function BlogAdminPage() {
 
             <p className="mt-2 text-xs text-zinc-400">
               Formatos permitidos: JPG, PNG, WebP y AVIF. Tamaño máximo: 10 MB.
-              {editingId !== null && " Si no seleccionas otra imagen, se conservará la actual."}
+              {editingId !== null &&
+                " Si no seleccionas otra imagen, se conservará la actual."}
             </p>
 
             {previewUrl && (
@@ -341,6 +412,7 @@ export default function BlogAdminPage() {
                 <p className="mb-2 text-sm font-medium text-zinc-700">
                   Vista previa
                 </p>
+
                 <img
                   src={previewUrl}
                   alt="Vista previa de la publicación"
@@ -411,7 +483,9 @@ export default function BlogAdminPage() {
               className="rounded-xl bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
             >
               {saving
-                ? selectedImage ? "Subiendo imagen y guardando..." : "Guardando..."
+                ? selectedImage
+                  ? "Subiendo imagen y guardando..."
+                  : "Guardando..."
                 : editingId !== null
                   ? "Guardar cambios"
                   : "Crear publicación"}

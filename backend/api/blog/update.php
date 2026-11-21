@@ -1,14 +1,17 @@
+
 <?php
 
+// CORS y autenticación.
 require_once __DIR__ . "/../../config/auth.php";
 requireAdmin();
 
+// Conexión a MySQL y helper de imágenes.
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../helpers/images.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
-// Solo permitimos solicitudes PUT.
+// Solo permitimos PUT.
 if ($_SERVER["REQUEST_METHOD"] !== "PUT") {
     http_response_code(405);
 
@@ -34,7 +37,7 @@ if (!$id || $id < 1) {
     exit;
 }
 
-// Recibimos los datos JSON.
+// Recibimos el JSON.
 $data = json_decode(file_get_contents("php://input"), true);
 
 $requiredFields = [
@@ -57,7 +60,7 @@ if (!is_array($data)) {
     exit;
 }
 
-// Validamos los campos obligatorios.
+// Validamos todos los campos.
 foreach ($requiredFields as $field) {
     if (
         !isset($data[$field]) ||
@@ -75,15 +78,39 @@ foreach ($requiredFields as $field) {
     }
 }
 
+// Validamos la fecha.
+$date = trim($data["date"]);
+$dateObject = DateTime::createFromFormat("!Y-m-d", $date);
+
+if (!$dateObject || $dateObject->format("Y-m-d") !== $date) {
+    http_response_code(400);
+
+    echo json_encode([
+        "success" => false,
+        "message" => "La fecha no es válida. Utiliza YYYY-MM-DD."
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+
+// Limpiamos los valores.
+$image = trim($data["image"]);
+$title = trim($data["title"]);
+$author = trim($data["author"]);
+$description = trim($data["description"]);
+$content = trim($data["content"]);
+
 try {
-    // Consultamos la imagen que tiene actualmente la publicación.
+    // Recuperamos la imagen actual.
     $find = $pdo->prepare("
         SELECT image
         FROM blog_posts
         WHERE id = :id
     ");
 
-    $find->execute([":id" => $id]);
+    $find->execute([
+        ":id" => $id
+    ]);
 
     $currentBlog = $find->fetch(PDO::FETCH_ASSOC);
 
@@ -99,34 +126,35 @@ try {
     }
 
     $oldImage = $currentBlog["image"];
-    $newImage = trim($data["image"]);
 
-    // Actualizamos los datos de la publicación.
+    // Actualizamos la publicación.
     $stmt = $pdo->prepare("
         UPDATE blog_posts
-        SET image = :image,
+        SET
+            image = :image,
             title = :title,
             date = :date,
             author = :author,
             description = :description,
-            content = :content
+            content = :content,
+            updated_at = NOW()
         WHERE id = :id
     ");
 
     $stmt->execute([
-        ":image" => $newImage,
-        ":title" => trim($data["title"]),
-        ":date" => $data["date"],
-        ":author" => trim($data["author"]),
-        ":description" => trim($data["description"]),
-        ":content" => trim($data["content"]),
+        ":image" => $image,
+        ":title" => $title,
+        ":date" => $date,
+        ":author" => $author,
+        ":description" => $description,
+        ":content" => $content,
         ":id" => $id
     ]);
 
-    // Si la imagen cambió, intentamos eliminar la anterior.
+    // Eliminamos la imagen anterior si fue reemplazada.
     $imageDeleted = true;
 
-    if ($oldImage !== $newImage) {
+    if ($oldImage !== $image) {
         $imageDeleted = deleteUploadedImage($oldImage, "blog");
     }
 
@@ -135,11 +163,13 @@ try {
         "message" => $imageDeleted
             ? "Publicación actualizada correctamente."
             : "Publicación actualizada, pero no fue posible eliminar la imagen anterior.",
-        "id" => $id,
+        "id" => (int) $id,
         "old_image_deleted" => $imageDeleted
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
+    error_log($e->getMessage());
+
     http_response_code(500);
 
     echo json_encode([

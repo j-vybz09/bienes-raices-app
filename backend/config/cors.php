@@ -1,33 +1,41 @@
+
 <?php
 
-// Origen autorizado del frontend durante el desarrollo.
-$allowedOrigin = "http://localhost:5173";
+// Orígenes autorizados para consumir la API.
+$allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:4173"
+];
 
-// Permitimos únicamente el origen configurado.
-header("Access-Control-Allow-Origin: " . $allowedOrigin);
+// Obtenemos el origen que envía el navegador.
+$origin = $_SERVER["HTTP_ORIGIN"] ?? "";
 
-// Permitimos enviar y recibir cookies de sesión.
-header("Access-Control-Allow-Credentials: true");
+// Verificamos si el origen está autorizado.
+if ($origin !== "" && in_array($origin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: " . $origin);
+    header("Access-Control-Allow-Credentials: true");
+    header("Vary: Origin");
+}
 
-// Métodos HTTP utilizados por nuestra API.
+// Métodos HTTP permitidos.
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
-// Cabeceras que puede enviar React.
+// Cabeceras permitidas.
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-// Indicamos que las respuestas pueden variar según el origen.
-header("Vary: Origin");
+// Tiempo de caché para las solicitudes OPTIONS.
+header("Access-Control-Max-Age: 86400");
 
-// Formato de respuesta de nuestra API.
+// Formato de respuesta.
 header("Content-Type: application/json; charset=UTF-8");
 
-// ======================================================
-// PETICIONES PREVIAS OPTIONS
-// ======================================================
-
-// El navegador puede enviar OPTIONS antes de POST, PUT o DELETE.
-// Respondemos sin ejecutar la lógica del endpoint.
+// Gestionamos las solicitudes previas del navegador.
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    if ($origin !== "" && !in_array($origin, $allowedOrigins, true)) {
+        http_response_code(403);
+        exit;
+    }
+
     http_response_code(204);
     exit;
 }

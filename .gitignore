@@ -41,3 +41,6 @@ database/*-data.sql
 # Configuración privada de PHP
 backend/config/database.local.php
 backend/config/database.production.php
+# Imágenes y archivos cargados por usuarios
+backend/uploads/*
+!backend/uploads/.gitkeep

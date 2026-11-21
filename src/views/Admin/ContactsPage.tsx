@@ -1,6 +1,11 @@
 
 import { useEffect, useState } from "react";
-import { getContacts, updateContactStatus, deleteContact, type ContactMessage} from "../../lib/api";
+import {
+  getContacts,
+  updateContactStatus,
+  deleteContact,
+  type ContactMessage,
+} from "../../lib/api";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
@@ -8,6 +13,7 @@ export default function ContactsPage() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
+  // Carga los mensajes cuando el usuario solicita actualizar.
   const loadContacts = async () => {
     try {
       setLoading(true);
@@ -26,10 +32,40 @@ export default function ContactsPage() {
     }
   };
 
+  // Carga inicial de mensajes.
   useEffect(() => {
-    loadContacts();
+    let cancelled = false;
+
+    const fetchContacts = async () => {
+      try {
+        const data = await getContacts();
+
+        if (!cancelled) {
+          setContacts(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "No fue posible cargar los mensajes."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchContacts();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  // Cambia el estado de un mensaje.
   const handleStatus = async (contact: ContactMessage) => {
     const newStatus = contact.status === "read" ? "pending" : "read";
 
@@ -56,6 +92,7 @@ export default function ContactsPage() {
     }
   };
 
+  // Elimina un mensaje.
   const handleDelete = async (id: number) => {
     const confirmed = window.confirm(
       "¿Estás seguro de que deseas eliminar este mensaje?"
@@ -82,6 +119,7 @@ export default function ContactsPage() {
     }
   };
 
+  // Formatea la fecha de recepción.
   const formatDate = (date: string) => {
     const parsedDate = new Date(date);
 
@@ -113,6 +151,7 @@ export default function ContactsPage() {
         </div>
 
         <button
+          type="button"
           onClick={loadContacts}
           disabled={loading}
           className="rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50"
@@ -149,6 +188,7 @@ export default function ContactsPage() {
           <h2 className="font-semibold text-zinc-900">
             Mensajes recibidos
           </h2>
+
           <p className="mt-1 text-sm text-zinc-500">
             Últimas consultas enviadas por tus clientes.
           </p>
@@ -161,7 +201,9 @@ export default function ContactsPage() {
         ) : error ? (
           <div className="p-10 text-center">
             <p className="text-sm text-red-600">{error}</p>
+
             <button
+              type="button"
               onClick={loadContacts}
               className="mt-4 text-sm font-medium underline"
             >
@@ -189,6 +231,7 @@ export default function ContactsPage() {
                       <h3 className="font-semibold text-zinc-900">
                         {contact.name}
                       </h3>
+
                       <p className="text-sm text-zinc-500">
                         {contact.email}
                       </p>
@@ -222,6 +265,7 @@ export default function ContactsPage() {
                   </span>
 
                   <button
+                    type="button"
                     onClick={() => handleStatus(contact)}
                     disabled={updatingId === contact.id}
                     className="rounded-lg border border-zinc-200 px-3 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
@@ -232,6 +276,7 @@ export default function ContactsPage() {
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => handleDelete(contact.id)}
                     disabled={updatingId === contact.id}
                     className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"

@@ -1,7 +1,16 @@
 import type { BlogPropiedad, Propiedad } from "../types";
 
-const API_URL = "http://localhost:8000/api";
+// URL base del backend.
+// En desarrollo utiliza PHP local.
+// En producción utiliza la URL configurada en las variables de entorno.
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:8000/api"
+).replace(/\/+$/, "");
+
+// Dirección principal del servidor PHP.
 const SERVER_URL = API_URL.replace(/\/api\/?$/, "");
+
+// Rutas de autenticación.
 const AUTH_URL = "/auth";
 
 // ======================================================
@@ -65,7 +74,7 @@ async function apiRequest<T = unknown>(
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    credentials: options.credentials ?? "same-origin",
+    credentials: options.credentials ?? "include",
     headers,
   });
 
@@ -143,34 +152,6 @@ export async function uploadImage(
     throw new ApiRequestError(
       result?.message ||
         `No fue posible subir la imagen (${response.status}).`,
-      response.status
-    );
-  }
-
-  return result.image;
-}
-
-
-
-// Sube una imagen exclusivamente a backend/uploads/blog/.
-// Este endpoint no recibe ni permite seleccionar la carpeta de destino.
-export async function uploadBlogImage(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("image", file);
-
-  const response = await fetch(`${API_URL}/blog/upload.php`, {
-    method: "POST",
-    credentials: "include",
-    body: formData,
-  });
-
-  const result = (await response.json().catch(() => null)) as
-    | UploadImageResponse
-    | null;
-
-  if (!response.ok || !result?.success || !result.image) {
-    throw new ApiRequestError(
-      result?.message || `No fue posible subir la imagen del blog (${response.status}).`,
       response.status
     );
   }
@@ -304,6 +285,21 @@ export async function deleteBlog(id: number): Promise<void> {
     method: "DELETE",
     credentials: "include",
   });
+}
+
+// Crear un mensaje de contacto desde la página pública.
+export async function createContactMessage(data: {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}): Promise<string> {
+  const result = await apiRequest("/contact/create.php", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+  return result.message ?? "Mensaje enviado correctamente.";
 }
 
 // ======================================================

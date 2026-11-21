@@ -1,40 +1,22 @@
+
 <?php
 
 require_once __DIR__ . "/../../config/cors.php";
-header("Content-Type: application/json; charset=utf-8");
+require_once __DIR__ . "/../../config/database.php";
 
-// Permitir solicitudes desde nuestro frontend
-header("Access-Control-Allow-Origin: http://localhost:5173");
+// Solo permitimos solicitudes POST.
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    http_response_code(405);
 
-// Permitir el método POST y las solicitudes OPTIONS
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+    echo json_encode([
+        "success" => false,
+        "message" => "Método no permitido."
+    ], JSON_UNESCAPED_UNICODE);
 
-// Permitir el encabezado Content-Type
-header("Access-Control-Allow-Headers: Content-Type");
-
-// Responder a la solicitud previa del navegador
-if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
-    http_response_code(204);
     exit;
 }
 
-header("Content-Type: application/json; charset=uft-8");
-
-require_once "../../config/database.php";
-require_once "../../config/cors.php";
-
 try {
-    // Solo permitimos solicitudes POST.
-    if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-        http_response_code(405);
-
-        echo json_encode([
-            "success" => false,
-            "message" => "Método no permitido"
-        ], JSON_UNESCAPED_UNICODE);
-
-        exit;
-    }
 
     // Recibimos los datos JSON enviados desde React.
     $data = json_decode(
@@ -47,13 +29,13 @@ try {
 
         echo json_encode([
             "success" => false,
-            "message" => "No se recibieron datos válidos"
+            "message" => "No se recibieron datos válidos."
         ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // Extraemos y limpiamos los datos.
+    // Limpiamos los datos recibidos.
     $name = trim($data["name"] ?? "");
     $email = trim($data["email"] ?? "");
     $phone = trim($data["phone"] ?? "");
@@ -65,7 +47,7 @@ try {
 
         echo json_encode([
             "success" => false,
-            "message" => "Nombre, correo y mensaje son obligatorios"
+            "message" => "Nombre, correo y mensaje son obligatorios."
         ], JSON_UNESCAPED_UNICODE);
 
         exit;
@@ -77,13 +59,13 @@ try {
 
         echo json_encode([
             "success" => false,
-            "message" => "El correo electrónico no es válido"
+            "message" => "El correo electrónico no es válido."
         ], JSON_UNESCAPED_UNICODE);
 
         exit;
     }
 
-    // Insertamos el mensaje utilizando una consulta preparada.
+    // Insertamos el mensaje en MySQL.
     $sql = "
         INSERT INTO contact_messages
             (name, email, phone, message)
@@ -100,14 +82,14 @@ try {
         ":message" => $message
     ]);
 
-    // Obtenemos el ID del mensaje registrado.
+    // Obtenemos el ID generado.
     $id = $pdo->lastInsertId();
 
     http_response_code(201);
 
     echo json_encode([
         "success" => true,
-        "message" => "Mensaje de contacto enviado correctamente",
+        "message" => "Mensaje de contacto enviado correctamente.",
         "data" => [
             "id" => $id,
             "name" => $name,
@@ -116,12 +98,13 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
+
     error_log($e->getMessage());
 
     http_response_code(500);
 
     echo json_encode([
         "success" => false,
-        "message" => "Error al guardar el mensaje de contacto"
+        "message" => "Error al guardar el mensaje de contacto."
     ], JSON_UNESCAPED_UNICODE);
 }

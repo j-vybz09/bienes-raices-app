@@ -1,14 +1,17 @@
+
 <?php
 
+// CORS y autenticación.
 require_once __DIR__ . "/../../config/auth.php";
 requireAdmin();
 
+// Conexión a MySQL y helper de imágenes.
 require_once __DIR__ . "/../../config/database.php";
 require_once __DIR__ . "/../../helpers/images.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
-// Solo permitimos solicitudes DELETE.
+// Solo permitimos DELETE.
 if ($_SERVER["REQUEST_METHOD"] !== "DELETE") {
     http_response_code(405);
 
@@ -20,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "DELETE") {
     exit;
 }
 
-// Validamos el ID recibido.
+// Validamos el ID.
 $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
 if (!$id || $id < 1) {
@@ -28,21 +31,23 @@ if (!$id || $id < 1) {
 
     echo json_encode([
         "success" => false,
-        "message" => "El ID de la publicación es obligatorio y debe ser válido."
+        "message" => "El ID de la publicación no es válido."
     ], JSON_UNESCAPED_UNICODE);
 
     exit;
 }
 
 try {
-    // Primero obtenemos la ruta de la imagen asociada a la publicación.
+    // Recuperamos la imagen de la publicación.
     $find = $pdo->prepare("
         SELECT image
         FROM blog_posts
         WHERE id = :id
     ");
 
-    $find->execute([":id" => $id]);
+    $find->execute([
+        ":id" => $id
+    ]);
 
     $blog = $find->fetch(PDO::FETCH_ASSOC);
 
@@ -57,27 +62,34 @@ try {
         exit;
     }
 
-    // Eliminamos primero el registro de MySQL.
+    // Eliminamos el registro de MySQL.
     $stmt = $pdo->prepare("
         DELETE FROM blog_posts
         WHERE id = :id
     ");
 
-    $stmt->execute([":id" => $id]);
+    $stmt->execute([
+        ":id" => $id
+    ]);
 
-    // Después eliminamos su imagen del servidor.
-    $imageDeleted = deleteUploadedImage($blog["image"], "blog");
+    // Eliminamos el archivo físico.
+    $imageDeleted = deleteUploadedImage(
+        $blog["image"],
+        "blog"
+    );
 
     echo json_encode([
         "success" => true,
         "message" => $imageDeleted
             ? "Publicación e imagen eliminadas correctamente."
             : "Publicación eliminada, pero no fue posible eliminar su imagen.",
-        "id" => $id,
+        "id" => (int) $id,
         "image_deleted" => $imageDeleted
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
+    error_log($e->getMessage());
+
     http_response_code(500);
 
     echo json_encode([

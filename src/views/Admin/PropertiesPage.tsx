@@ -1,6 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getProperties, deleteProperty, getImageUrl} from "../../lib/api";
+import {
+  getProperties,
+  deleteProperty,
+  getImageUrl,
+} from "../../lib/api";
 import type { Propiedad } from "../../types";
 
 export default function PropertiesPage() {
@@ -9,6 +14,7 @@ export default function PropertiesPage() {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  // Actualización manual
   const loadProperties = async () => {
     try {
       setLoading(true);
@@ -27,8 +33,37 @@ export default function PropertiesPage() {
     }
   };
 
+  // Carga inicial
   useEffect(() => {
-    loadProperties();
+    let cancelled = false;
+
+    const fetchProperties = async () => {
+      try {
+        const data = await getProperties();
+
+        if (!cancelled) {
+          setProperties(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "No fue posible cargar las propiedades."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchProperties();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -58,18 +93,18 @@ export default function PropertiesPage() {
   };
 
   const formatPrice = (price: string) => {
-  const numericPrice = Number(price);
+    const numericPrice = Number(price);
 
-  if (!Number.isFinite(numericPrice)) {
-    return "Precio no disponible";
-  }
+    if (!Number.isFinite(numericPrice)) {
+      return "Precio no disponible";
+    }
 
-  return new Intl.NumberFormat("es-CR", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(numericPrice);
-};
+    return new Intl.NumberFormat("es-CR", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(numericPrice);
+  };
 
   return (
     <section className="space-y-6">
